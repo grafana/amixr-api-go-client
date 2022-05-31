@@ -88,7 +88,7 @@ func newClient(url string) (*Client, error) {
 	c.limiter = rate.NewLimiter(limit, 50)
 
 	// Set the default base URL. _ suppress error handling
-	err := c.setBaseURL(url + apiVersionPath)
+	err := c.setBaseURL(url)
 	if err != nil {
 		return nil, err
 	}
@@ -111,9 +111,17 @@ func newClient(url string) (*Client, error) {
 
 func (c *Client) setBaseURL(urlStr string) error {
 
+	if !strings.HasSuffix(urlStr, "/") {
+		urlStr += "/"
+	}
+
 	baseURL, err := url.Parse(urlStr)
 	if err != nil {
 		return err
+	}
+
+	if !strings.HasSuffix(baseURL.Path, apiVersionPath) {
+		baseURL.Path += apiVersionPath
 	}
 	c.baseURL = baseURL
 
