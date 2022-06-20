@@ -27,15 +27,15 @@ type PaginatedCustomActionsResponse struct {
 }
 
 type CustomAction struct {
-	ID                  string `json:"id"`
-	Name                string `json:"name"`
-	TeamId              string `json:"team_id"`
-	Webhook             string `json:"webhook"`
-	Data                string `json:"data"`
-	User                string `json:"user"`
-	Password            string `json:"password"`
-	AuthorizationHeader string `json:"authorization_header"`
-	ForwardWholePayload bool   `json:"forward_whole_payload"`
+	ID                  string  `json:"id"`
+	Name                string  `json:"name"`
+	TeamId              string  `json:"team_id"`
+	Webhook             string  `json:"webhook"`
+	Data                *string `json:"data"`
+	User                *string `json:"user"`
+	Password            *string `json:"password"`
+	AuthorizationHeader *string `json:"authorization_header"`
+	ForwardWholePayload bool    `json:"forward_whole_payload"`
 }
 
 type ListCustomActionOptions struct {
@@ -120,13 +120,13 @@ func (service *CustomActionService) CreateCustomAction(opt *CreateCustomActionOp
 }
 
 type UpdateCustomActionOptions struct {
-	Name                string `json:"name,omitempty"`
-	Webhook             string `json:"webhook"`
+	Name                string  `json:"name,omitempty"`
+	Webhook             string  `json:"webhook"`
 	Data                *string `json:"data"`
 	User                *string `json:"user"`
 	Password            *string `json:"password"`
 	AuthorizationHeader *string `json:"authorization_header"`
-	ForwardWholePayload bool   `json:"forward_whole_payload"`
+	ForwardWholePayload bool    `json:"forward_whole_payload"`
 }
 
 // UpdateCustomAction updates custom action
