@@ -36,7 +36,9 @@ var testIntegrationBody = `{
 	"name": "Test Grafana",
 	"type": "grafana",
 	"link": "https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
-	"default_route_id": "RIYGUJXCPFHXY",
+	"default_route": {
+	    "id": "RIYGUJXCPFHXY"
+	    },
 	"incidents_count": 0,
 	"templates": {
 	"grouping_key": "key",

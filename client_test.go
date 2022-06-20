@@ -40,7 +40,7 @@ func TestNewClient(t *testing.T) {
 		t.Fatalf("Failed to create client: %v", err)
 	}
 
-	expectedBaseURL := "base_url" + apiVersionPath
+	expectedBaseURL := "base_url/" + apiVersionPath
 
 	if c.BaseURL().String() != expectedBaseURL {
 		t.Errorf("NewClient BaseURL is %s, want %s", c.BaseURL().String(), expectedBaseURL)
@@ -72,7 +72,7 @@ func TestCheckResponse(t *testing.T) {
 		t.Fatal("Expected error response.")
 	}
 
-	want := fmt.Sprintf("GET %s: 400 {detail: error}", req.URL)
+	want := fmt.Sprintf("GET ://%s: 400 {detail: error}", req.URL)
 
 	if errResp.Error() != want {
 		t.Errorf("Expected error: %s, got %s", want, errResp.Error())
