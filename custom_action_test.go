@@ -63,7 +63,7 @@ func TestCreateCustomAction(t *testing.T) {
 
 	createOptions := &CreateCustomActionOptions{
 		Name: "Test CustomAction",
-		Webhook: "https://example.com",
+		Url:  "https://example.com",
 	}
 	customAction, _, err := client.CustomActions.CreateCustomAction(createOptions)
 
