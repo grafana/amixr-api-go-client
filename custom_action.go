@@ -30,7 +30,7 @@ type CustomAction struct {
 	ID                  string  `json:"id"`
 	Name                string  `json:"name"`
 	TeamId              string  `json:"team_id"`
-	Webhook             string  `json:"webhook"`
+	Url                 string  `json:"url"`
 	Data                *string `json:"data"`
 	User                *string `json:"user"`
 	Password            *string `json:"password"`
@@ -89,7 +89,7 @@ func (service *CustomActionService) GetCustomAction(id string, opt *GetCustomAct
 type CreateCustomActionOptions struct {
 	Name                string  `json:"name,omitempty"`
 	TeamId              string  `json:"team_id"`
-	Webhook             string  `json:"webhook,omitempty"`
+	Url                 string  `json:"url,omitempty"`
 	Data                *string `json:"data"`
 	User                *string `json:"user"`
 	Password            *string `json:"password"`
@@ -121,7 +121,7 @@ func (service *CustomActionService) CreateCustomAction(opt *CreateCustomActionOp
 
 type UpdateCustomActionOptions struct {
 	Name                string  `json:"name,omitempty"`
-	Webhook             string  `json:"webhook"`
+	Url                 string  `json:"url"`
 	Data                *string `json:"data"`
 	User                *string `json:"user"`
 	Password            *string `json:"password"`
