@@ -103,10 +103,11 @@ func (service *IntegrationService) GetIntegration(id string, opt *GetIntegration
 }
 
 type CreateIntegrationOptions struct {
-	TeamId    string     `json:"team_id"`
-	Name      string     `json:"name,omitempty"`
-	Type      string     `json:"type,omitempty"`
-	Templates *Templates `json:"templates,omitempty"`
+	TeamId       string        `json:"team_id"`
+	Name         string        `json:"name,omitempty"`
+	Type         string        `json:"type,omitempty"`
+	Templates    *Templates    `json:"templates,omitempty"`
+	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
 }
 
 // CreateIntegration creates integration with type, team_id and optional given name.
