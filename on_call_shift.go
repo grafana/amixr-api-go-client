@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// OnCallShiftService handles requests to on-call shoft endpoint
+// OnCallShiftService handles requests to on-call shift endpoint
 //
 // // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/on_call_shifts/
 type OnCallShiftService struct {
