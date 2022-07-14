@@ -42,6 +42,7 @@ type Client struct {
 	disableRetries bool
 	limiter        *rate.Limiter
 	// List of Services. Keep in sync with func newClient
+	Alerts           *AlertService
 	Integrations     *IntegrationService
 	EscalationChains *EscalationChainService
 	Escalations      *EscalationService
@@ -94,6 +95,7 @@ func newClient(url string) (*Client, error) {
 	}
 
 	// Create services. Keep in sync with Client struct
+	c.Alerts = NewAlertService(c)
 	c.Integrations = NewIntegrationService(c)
 	c.EscalationChains = NewEscalationChainService(c)
 	c.Escalations = NewEscalationService(c)
