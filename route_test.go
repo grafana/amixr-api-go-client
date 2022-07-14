@@ -8,6 +8,8 @@ import (
 )
 
 var testSlackChannelId = "TEST_SLACK_CHANNEL_ID"
+var testTelegramChannelId = "TESTTELEGRAMID"
+var testMSTeamsChannelId = "TESTMSTEAMSID"
 
 var testRoute = &Route{
 	ID:             "RH2V5FYIPYJ1M",
@@ -16,7 +18,16 @@ var testRoute = &Route{
 	RoutingRegex:   "us-west",
 	IsTheLastRoute: false,
 	SlackRoute: &SlackRoute{
-		&testSlackChannelId,
+		ChannelId: &testSlackChannelId,
+		Enabled: true,
+	},
+	TelegramRoute: &TelegramRoute{
+	    Id: &testTelegramChannelId,
+	    Enabled: true,
+	},
+	MSTeamsRoute: &MSTeamsRoute{
+	    Id: &testMSTeamsChannelId,
+	    Enabled: true,
 	},
 }
 
@@ -27,7 +38,16 @@ var testRouteBody = `{
 	"position": 0,
 	"is_the_last_route": false,
 	"slack": {
-		"channel_id": "TEST_SLACK_CHANNEL_ID"
+		"channel_id": "TEST_SLACK_CHANNEL_ID",
+		"enabled": true
+	},
+	"telegram": {
+	    "id": "TESTTELEGRAMID",
+        "enabled": true
+	},
+	"msteams": {
+	    "id": "TESTMSTEAMSID",
+	    "enabled": true
 	}
 }`
 
@@ -44,7 +64,16 @@ func TestCreateRoute(t *testing.T) {
 		IntegrationId: "CGEXJ922S7TXQ",
 		RoutingRegex:  "us-west",
 		Slack: &SlackRoute{
-			&testSlackChannelId,
+			ChannelId: &testSlackChannelId,
+			Enabled: true,
+		},
+		Telegram: &TelegramRoute{
+		    Id: &testTelegramChannelId,
+		    Enabled: true,
+		},
+		MSTeams: &MSTeamsRoute{
+		    Id: &testMSTeamsChannelId,
+		    Enabled: true,
 		},
 	}
 	route, _, err := client.Routes.CreateRoute(createOptions)

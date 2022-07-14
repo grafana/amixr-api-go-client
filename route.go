@@ -28,17 +28,28 @@ type PaginatedRoutesResponse struct {
 }
 
 type Route struct {
-	ID                string      `json:"id"`
-	IntegrationId     string      `json:"integration_id"`
-	EscalationChainId string      `json:"escalation_chain_id"`
-	Position          int         `json:"position"`
-	RoutingRegex      string      `json:"routing_regex"`
-	IsTheLastRoute    bool        `json:"is_the_last_route"`
-	SlackRoute        *SlackRoute `json:"slack"`
+	ID                string         `json:"id"`
+	IntegrationId     string         `json:"integration_id"`
+	EscalationChainId string         `json:"escalation_chain_id"`
+	Position          int            `json:"position"`
+	RoutingRegex      string         `json:"routing_regex"`
+	IsTheLastRoute    bool           `json:"is_the_last_route"`
+	SlackRoute        *SlackRoute    `json:"slack"`
+	TelegramRoute     *TelegramRoute `json:"telegram"`
+	MSTeamsRoute      *MSTeamsRoute  `json:"msteams"`
 }
 
 type SlackRoute struct {
 	ChannelId *string `json:"channel_id"`
+	Enabled   bool    `json:"enabled"`
+}
+type TelegramRoute struct {
+	Id      *string `json:"id"`
+    Enabled bool    `json:"enabled"`
+}
+type MSTeamsRoute struct {
+	Id      *string `json:"id"`
+    Enabled bool    `json:"enabled"`
 }
 
 type ListRouteOptions struct {
@@ -91,12 +102,14 @@ func (service *RouteService) GetRoute(id string, opt *GetRouteOptions) (*Route, 
 }
 
 type CreateRouteOptions struct {
-	IntegrationId     string      `json:"integration_id,omitempty"`
-	EscalationChainId string      `json:"escalation_chain_id,omitempty"`
-	Position          *int        `json:"position,omitempty"`
-	RoutingRegex      string      `json:"routing_regex,omitempty"`
-	Slack             *SlackRoute `json:"slack,omitempty"`
-	ManualOrder       bool        `url:"manual_order,omitempty" json:"manual_order,omitempty"`
+	IntegrationId     string         `json:"integration_id,omitempty"`
+	EscalationChainId string         `json:"escalation_chain_id,omitempty"`
+	Position          *int           `json:"position,omitempty"`
+	RoutingRegex      string         `json:"routing_regex,omitempty"`
+	Slack             *SlackRoute    `json:"slack,omitempty"`
+	Telegram          *TelegramRoute `json:"telegram,omitempty"`
+	MSTeams           *MSTeamsRoute  `json:"msteams,omitempty"`
+	ManualOrder       bool           `url:"manual_order,omitempty" json:"manual_order,omitempty"`
 }
 
 // CreateRoute creates route with given name and type
@@ -122,11 +135,13 @@ func (service *RouteService) CreateRoute(opt *CreateRouteOptions) (*Route, *http
 }
 
 type UpdateRouteOptions struct {
-	EscalationChainId string      `json:"escalation_chain_id,omitempty"`
-	Position          *int        `json:"position,omitempty"`
-	Slack             *SlackRoute `json:"slack,omitempty"`
-	RoutingRegex      string      `json:"routing_regex,omitempty"`
-	ManualOrder       bool        `url:"manual_order,omitempty" json:"manual_order,omitempty"`
+	EscalationChainId string         `json:"escalation_chain_id,omitempty"`
+	Position          *int           `json:"position,omitempty"`
+	Slack             *SlackRoute    `json:"slack,omitempty"`
+	Telegram          *TelegramRoute `json:"telegram,omitempty"`
+	MSTeams           *MSTeamsRoute  `json:"msteams,omitempty"`
+	RoutingRegex      string         `json:"routing_regex,omitempty"`
+	ManualOrder       bool           `url:"manual_order,omitempty" json:"manual_order,omitempty"`
 }
 
 // UpdateRoute updates route with new templates and/or name. At least one field in template is required
