@@ -38,9 +38,11 @@ type Integration struct {
 }
 
 type DefaultRoute struct {
-	ID                string      `json:"id"`
-	EscalationChainId *string     `json:"escalation_chain_id"`
-	SlackRoute        *SlackRoute `json:"slack,omitempty"`
+	ID                string         `json:"id"`
+	EscalationChainId *string        `json:"escalation_chain_id"`
+	SlackRoute        *SlackRoute    `json:"slack,omitempty"`
+	TelegramRoute     *TelegramRoute `json:"telegram,omitempty"`
+	MSTeamsRoute      *MSTeamsRoute  `json:"msteams,omitempty"`
 }
 
 type Templates struct {
