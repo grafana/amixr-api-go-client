@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	apiVersionPath = "api/v1/"
+	apiVersionPath   = "api/v1/"
+	defaultUserAgent = "amixr-api-go-client"
 )
 
 type ListOptions struct {
@@ -41,6 +42,7 @@ type Client struct {
 	baseURL        *url.URL
 	disableRetries bool
 	limiter        *rate.Limiter
+	UserAgent      string
 	// List of Services. Keep in sync with func newClient
 	Alerts           *AlertService
 	Integrations     *IntegrationService
@@ -93,6 +95,7 @@ func newClient(url string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.UserAgent = defaultUserAgent
 
 	// Create services. Keep in sync with Client struct
 	c.Alerts = NewAlertService(c)
@@ -142,6 +145,9 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehtt
 	reqHeaders := make(http.Header)
 	reqHeaders.Set("Accept", "application/json")
 	reqHeaders.Set("Authorization", c.token)
+	if c.UserAgent != "" {
+		reqHeaders.Set("User-Agent", c.UserAgent)
+	}
 
 	var body interface{}
 	switch {
