@@ -9,6 +9,7 @@ import (
 
 var key = "key"
 var signal = "signal"
+var source_link = "source_link"
 var testIntegration = &Integration{
 	ID:     "CFRPV98RPR1U8",
 	TeamId: "T3HRAP3K3IKOP",
@@ -21,9 +22,36 @@ var testIntegration = &Integration{
 	IncidentsCount: 0,
 	Templates: &Templates{
 		&key,
-		&signal,
-		&SlackTemplate{
+		&signal, // resolve signal;
+		&signal, // ack signal
+		&source_link,
+		&TitleMessageImageTemplate{ // Slack
 			nil,
+			nil,
+			nil,
+		},
+		&TitleMessageImageTemplate{ // Telegram
+			nil,
+			nil,
+			nil,
+		},
+		&TitleMessageImageTemplate{ // MSTeams
+			nil,
+			nil,
+			nil,
+		},
+		&TitleMessageImageTemplate{ // Web
+			nil,
+			nil,
+			nil,
+		},
+		&TitleTemplate{ // PhoneCall
+			nil,
+		},
+		&TitleTemplate{ // SMS
+			nil,
+		},
+		&TitleMessageTemplate{ // Email
 			nil,
 			nil,
 		},
