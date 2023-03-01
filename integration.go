@@ -46,14 +46,39 @@ type DefaultRoute struct {
 }
 
 type Templates struct {
-	GroupingKey   *string        `json:"grouping_key"`
-	ResolveSignal *string        `json:"resolve_signal"`
-	Slack         *SlackTemplate `json:"slack"`
+	GroupingKey       *string                    `json:"grouping_key"`
+	ResolveSignal     *string                    `json:"resolve_signal"`
+	AcknowledgeSignal *string                    `json:"acknowledge_signal"`
+	SourceLink        *string                    `json:"source_link"`
+	Slack             *TitleMessageImageTemplate `json:"slack"`
+	Web               *TitleMessageImageTemplate `json:"web"`
+	MSTeams           *TitleMessageImageTemplate `json:"msteams"`
+	Telegram          *TitleMessageImageTemplate `json:"telegram"`
+	PhoneCall         *TitleTemplate             `json:"phone_call"`
+	SMS               *TitleTemplate             `json:"sms"`
+	Email             *TitleMessageTemplate      `json:"email"`
 }
 
-type SlackTemplate struct {
+type TitleMessageImageTemplate struct {
 	Title    *string `json:"title"`
 	Message  *string `json:"message"`
+	ImageURL *string `json:"image_url"`
+}
+
+type TitleMessageTemplate struct {
+	Title   *string `json:"title"`
+	Message *string `json:"message"`
+}
+
+type TitleTemplate struct {
+	Title *string `json:"title"`
+}
+
+type MessageTemplate struct {
+	Message *string `json:"message"`
+}
+
+type ImageURLTemplate struct {
 	ImageURL *string `json:"image_url"`
 }
 

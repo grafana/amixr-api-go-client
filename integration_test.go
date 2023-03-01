@@ -9,6 +9,7 @@ import (
 
 var key = "key"
 var signal = "signal"
+var source_link = "source_link"
 var testIntegration = &Integration{
 	ID:     "CFRPV98RPR1U8",
 	TeamId: "T3HRAP3K3IKOP",
@@ -21,9 +22,36 @@ var testIntegration = &Integration{
 	IncidentsCount: 0,
 	Templates: &Templates{
 		&key,
-		&signal,
-		&SlackTemplate{
+		&signal, // resolve signal;
+		&signal, // ack signal
+		&source_link,
+		&TitleMessageImageTemplate{ // Slack
 			nil,
+			nil,
+			nil,
+		},
+		&TitleMessageImageTemplate{ // Telegram
+			nil,
+			nil,
+			nil,
+		},
+		&TitleMessageImageTemplate{ // MSTeams
+			nil,
+			nil,
+			nil,
+		},
+		&TitleMessageImageTemplate{ // Web
+			nil,
+			nil,
+			nil,
+		},
+		&TitleTemplate{ // PhoneCall
+			nil,
+		},
+		&TitleTemplate{ // SMS
+			nil,
+		},
+		&TitleMessageTemplate{ // Email
 			nil,
 			nil,
 		},
@@ -31,25 +59,52 @@ var testIntegration = &Integration{
 }
 
 var testIntegrationBody = `{
-	"id": "CFRPV98RPR1U8",
-	"team_id": "T3HRAP3K3IKOP",
-	"name": "Test Grafana",
-	"type": "grafana",
-	"link": "https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
-	"default_route": {
-	    "id": "RIYGUJXCPFHXY"
-	    },
-	"incidents_count": 0,
-	"templates": {
-	"grouping_key": "key",
-	"resolve_signal": "signal",
-	"slack": {
-		"title": null,
-		"message": null,
-		"image_url": null
-		}
+	"id":"CFRPV98RPR1U8",
+	"team_id":"T3HRAP3K3IKOP",
+	"name":"Test Grafana",
+	"type":"grafana",
+	"link":"https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
+	"default_route":{
+	   "id":"RIYGUJXCPFHXY"
+	},
+	"incidents_count":0,
+	"templates":{
+	   "grouping_key":"key",
+	   "source_link":"source_link",
+	   "resolve_signal":"signal",
+	   "acknowledge_signal":"signal",
+	   "slack":{
+		  "title":null,
+		  "message":null,
+		  "image_url":null
+	   },
+	   "web":{
+		  "title":null,
+		  "message":null,
+		  "image_url":null
+	   },
+	   "sms":{
+		  "title":null
+	   },
+	   "phone_call":{
+		  "title":null
+	   },
+	   "telegram":{
+		  "title":null,
+		  "message":null,
+		  "image_url":null
+	   },
+	   "email":{
+		  "title":null,
+		  "message":null
+	   },
+	   "msteams":{
+		  "title":null,
+		  "message":null,
+		  "image_url":null
+	   }
 	}
-}`
+ }`
 
 func TestCreateIntegration(t *testing.T) {
 	mux, server, client := setup(t)
