@@ -130,9 +130,10 @@ func (service *IntegrationService) CreateIntegration(opt *CreateIntegrationOptio
 }
 
 type UpdateIntegrationOptions struct {
-	Name         string        `json:"name,omitempty"`
-	Templates    *Templates    `json:"templates,omitempty"`
-	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
+	Name			string			`json:"name,omitempty"`
+	TeamId			string			`json:"team_id,omitempty"`
+	Templates		*Templates		`json:"templates,omitempty"`
+	DefaultRoute	*DefaultRoute	`json:"default_route,omitempty"`
 }
 
 // UpdateIntegration updates integration with new templates, name and default route.
