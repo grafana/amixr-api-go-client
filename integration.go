@@ -159,7 +159,7 @@ func (service *IntegrationService) CreateIntegration(opt *CreateIntegrationOptio
 
 type UpdateIntegrationOptions struct {
 	Name         string        `json:"name,omitempty"`
-	TeamId       *string       `json:"team_id"`
+	TeamId       string        `json:"team_id"`
 	Templates    *Templates    `json:"templates,omitempty"`
 	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
 }
