@@ -38,20 +38,47 @@ type Integration struct {
 }
 
 type DefaultRoute struct {
-	ID                string      `json:"id"`
-	EscalationChainId *string     `json:"escalation_chain_id"`
-	SlackRoute        *SlackRoute `json:"slack,omitempty"`
+	ID                string         `json:"id"`
+	EscalationChainId *string        `json:"escalation_chain_id"`
+	SlackRoute        *SlackRoute    `json:"slack,omitempty"`
+	TelegramRoute     *TelegramRoute `json:"telegram,omitempty"`
+	MSTeamsRoute      *MSTeamsRoute  `json:"msteams,omitempty"`
 }
 
 type Templates struct {
-	GroupingKey   *string        `json:"grouping_key"`
-	ResolveSignal *string        `json:"resolve_signal"`
-	Slack         *SlackTemplate `json:"slack"`
+	GroupingKey       *string                    `json:"grouping_key"`
+	ResolveSignal     *string                    `json:"resolve_signal"`
+	AcknowledgeSignal *string                    `json:"acknowledge_signal"`
+	SourceLink        *string                    `json:"source_link"`
+	Slack             *TitleMessageImageTemplate `json:"slack"`
+	Web               *TitleMessageImageTemplate `json:"web"`
+	MSTeams           *TitleMessageImageTemplate `json:"msteams"`
+	Telegram          *TitleMessageImageTemplate `json:"telegram"`
+	PhoneCall         *TitleTemplate             `json:"phone_call"`
+	SMS               *TitleTemplate             `json:"sms"`
+	Email             *TitleMessageTemplate      `json:"email"`
 }
 
-type SlackTemplate struct {
+type TitleMessageImageTemplate struct {
 	Title    *string `json:"title"`
 	Message  *string `json:"message"`
+	ImageURL *string `json:"image_url"`
+}
+
+type TitleMessageTemplate struct {
+	Title   *string `json:"title"`
+	Message *string `json:"message"`
+}
+
+type TitleTemplate struct {
+	Title *string `json:"title"`
+}
+
+type MessageTemplate struct {
+	Message *string `json:"message"`
+}
+
+type ImageURLTemplate struct {
 	ImageURL *string `json:"image_url"`
 }
 
@@ -103,10 +130,11 @@ func (service *IntegrationService) GetIntegration(id string, opt *GetIntegration
 }
 
 type CreateIntegrationOptions struct {
-	TeamId    string     `json:"team_id"`
-	Name      string     `json:"name,omitempty"`
-	Type      string     `json:"type,omitempty"`
-	Templates *Templates `json:"templates,omitempty"`
+	TeamId       string        `json:"team_id"`
+	Name         string        `json:"name,omitempty"`
+	Type         string        `json:"type,omitempty"`
+	Templates    *Templates    `json:"templates,omitempty"`
+	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
 }
 
 // CreateIntegration creates integration with type, team_id and optional given name.
