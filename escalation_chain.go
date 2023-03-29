@@ -107,8 +107,8 @@ func (service *EscalationChainService) CreateEscalationChain(opt *CreateEscalati
 }
 
 type UpdateEscalationChainOptions struct {
-	Name	string	`json:"name,omitempty"`
-	TeamId	string	`json:"team_id,omitempty"`
+	Name   string `json:"name,omitempty"`
+	TeamId string `json:"team_id"`
 }
 
 // UpdateEscalationChain updates escalation chain with name.

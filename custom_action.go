@@ -127,7 +127,7 @@ type UpdateCustomActionOptions struct {
 	Password            *string `json:"password"`
 	AuthorizationHeader *string `json:"authorization_header"`
 	ForwardWholePayload bool    `json:"forward_whole_payload"`
-	TeamId              string  `json:"team_id,omitempty"`
+	TeamId              string  `json:"team_id"`
 }
 
 // UpdateCustomAction updates custom action
