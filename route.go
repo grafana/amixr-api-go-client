@@ -33,6 +33,7 @@ type Route struct {
 	EscalationChainId string         `json:"escalation_chain_id"`
 	Position          int            `json:"position"`
 	RoutingRegex      string         `json:"routing_regex"`
+	RoutingType       string         `json:"routing_type"`
 	IsTheLastRoute    bool           `json:"is_the_last_route"`
 	SlackRoute        *SlackRoute    `json:"slack"`
 	TelegramRoute     *TelegramRoute `json:"telegram"`
@@ -45,17 +46,18 @@ type SlackRoute struct {
 }
 type TelegramRoute struct {
 	Id      *string `json:"id"`
-    Enabled bool    `json:"enabled"`
+	Enabled bool    `json:"enabled"`
 }
 type MSTeamsRoute struct {
 	Id      *string `json:"id"`
-    Enabled bool    `json:"enabled"`
+	Enabled bool    `json:"enabled"`
 }
 
 type ListRouteOptions struct {
 	ListOptions
 	IntegrationId string `url:"integration_id,omitempty" json:"integration_id,omitempty"`
 	RoutingRegex  string `url:"routing_regex,omitempty" json:"routing_regex,omitempty"`
+	RoutingType   string `url:"routing_type,omitempty" json:"routing_type,omitempty"`
 }
 
 // ListRoutes fetches all routes for authorized organization
@@ -106,6 +108,7 @@ type CreateRouteOptions struct {
 	EscalationChainId string         `json:"escalation_chain_id,omitempty"`
 	Position          *int           `json:"position,omitempty"`
 	RoutingRegex      string         `json:"routing_regex,omitempty"`
+	RoutingType       string         `json:"routing_type,omitempty"`
 	Slack             *SlackRoute    `json:"slack,omitempty"`
 	Telegram          *TelegramRoute `json:"telegram,omitempty"`
 	MSTeams           *MSTeamsRoute  `json:"msteams,omitempty"`
@@ -141,6 +144,7 @@ type UpdateRouteOptions struct {
 	Telegram          *TelegramRoute `json:"telegram,omitempty"`
 	MSTeams           *MSTeamsRoute  `json:"msteams,omitempty"`
 	RoutingRegex      string         `json:"routing_regex,omitempty"`
+	RoutingType       string         `json:"routing_type,omitempty"`
 	ManualOrder       bool           `url:"manual_order,omitempty" json:"manual_order,omitempty"`
 }
 
