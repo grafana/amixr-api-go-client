@@ -56,6 +56,7 @@ type Client struct {
 	CustomActions    *CustomActionService
 	OnCallShifts     *OnCallShiftService
 	Teams            *TeamService
+	Webhooks         *WebhookService
 }
 
 func New(base_url, token string) (*Client, error) {
@@ -110,6 +111,7 @@ func newClient(url string) (*Client, error) {
 	c.CustomActions = NewCustomActionService(c)
 	c.OnCallShifts = NewOnCallShiftService(c)
 	c.Teams = NewTeamService(c)
+	c.Webhooks = NewWebhookService(c)
 
 	return c, nil
 }
