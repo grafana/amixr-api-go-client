@@ -27,16 +27,17 @@ type PaginatedSchedulesResponse struct {
 }
 
 type Schedule struct {
-	ID               string         `json:"id"`
-	TeamId           string         `json:"team_id"`
-	Type             string         `json:"type"`
-	OnCallNow        []string       `json:"on_call_now"`
-	Name             string         `json:"name"`
-	ICalUrlPrimary   *string        `json:"ical_url_primary"`
-	ICalUrlOverrides *string        `json:"ical_url_overrides"`
-	TimeZone         string         `json:"time_zone"`
-	Slack            *SlackSchedule `json:"slack"`
-	Shifts           *[]string      `json:"shifts"`
+	ID                 string         `json:"id"`
+	TeamId             string         `json:"team_id"`
+	Type               string         `json:"type"`
+	OnCallNow          []string       `json:"on_call_now"`
+	Name               string         `json:"name"`
+	ICalUrlPrimary     *string        `json:"ical_url_primary"`
+	ICalUrlOverrides   *string        `json:"ical_url_overrides"`
+	EnableWebOverrides bool           `json:"enable_web_overrides"`
+	TimeZone           string         `json:"time_zone"`
+	Slack              *SlackSchedule `json:"slack"`
+	Shifts             *[]string      `json:"shifts"`
 }
 
 type SlackSchedule struct {
@@ -93,14 +94,15 @@ func (service *ScheduleService) GetSchedule(id string, opt *GetScheduleOptions) 
 }
 
 type CreateScheduleOptions struct {
-	TeamId           string         `json:"team_id"`
-	Name             string         `json:"name"`
-	Type             string         `json:"type"`
-	ICalUrlPrimary   *string        `json:"ical_url_primary"`
-	ICalUrlOverrides *string        `json:"ical_url_overrides"`
-	TimeZone         string         `json:"time_zone,omitempty"`
-	Slack            *SlackSchedule `json:"slack,omitempty"`
-	Shifts           *[]string      `json:"shifts"`
+	TeamId             string         `json:"team_id"`
+	Name               string         `json:"name"`
+	Type               string         `json:"type"`
+	ICalUrlPrimary    *string         `json:"ical_url_primary"`
+	ICalUrlOverrides  *string         `json:"ical_url_overrides"`
+	EnableWebOverrides bool           `json:"enable_web_overrides"`
+	TimeZone           string         `json:"time_zone,omitempty"`
+	Slack              *SlackSchedule `json:"slack,omitempty"`
+	Shifts             *[]string      `json:"shifts"`
 }
 
 // CreateSchedule creates a schedule with given name, type and other parameters depending on type/
@@ -125,13 +127,14 @@ func (service *ScheduleService) CreateSchedule(opt *CreateScheduleOptions) (*Sch
 }
 
 type UpdateScheduleOptions struct {
-	Name             string         `json:"name,omitempty"`
-	TeamId           string         `json:"team_id"`
-	ICalUrlPrimary   *string        `json:"ical_url_primary"`
-	ICalUrlOverrides *string        `json:"ical_url_overrides"`
-	TimeZone         string         `json:"time_zone,omitempty"`
-	Slack            *SlackSchedule `json:"slack,omitempty"`
-	Shifts           *[]string      `json:"shifts"`
+	Name               string         `json:"name,omitempty"`
+	TeamId             string         `json:"team_id"`
+	ICalUrlPrimary     *string        `json:"ical_url_primary"`
+	ICalUrlOverrides   *string        `json:"ical_url_overrides"`
+	TimeZone           string         `json:"time_zone,omitempty"`
+	EnableWebOverrides bool           `json:"enable_web_overrides"`
+	Slack              *SlackSchedule `json:"slack,omitempty"`
+	Shifts             *[]string      `json:"shifts"`
 }
 
 // UpdateSchedule updates a schedule.
