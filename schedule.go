@@ -97,8 +97,8 @@ type CreateScheduleOptions struct {
 	TeamId             string         `json:"team_id"`
 	Name               string         `json:"name"`
 	Type               string         `json:"type"`
-	ICalUrlPrimary    *string         `json:"ical_url_primary"`
-	ICalUrlOverrides  *string         `json:"ical_url_overrides"`
+	ICalUrlPrimary     *string        `json:"ical_url_primary"`
+	ICalUrlOverrides   *string        `json:"ical_url_overrides"`
 	EnableWebOverrides bool           `json:"enable_web_overrides"`
 	TimeZone           string         `json:"time_zone,omitempty"`
 	Slack              *SlackSchedule `json:"slack,omitempty"`
