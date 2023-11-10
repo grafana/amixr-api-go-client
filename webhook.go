@@ -72,7 +72,7 @@ func (service *WebhookService) ListWebhooks(opt *ListWebhookOptions) (*Paginated
 type GetWebhookOptions struct {
 }
 
-// GetWebhook fetches custom action by given id.
+// GetWebhook fetches webhook by given id.
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/outgoing_webhooks/
 func (service *WebhookService) GetWebhook(id string, opt *GetWebhookOptions) (*Webhook, *http.Response, error) {
@@ -109,7 +109,7 @@ type CreateWebhookOptions struct {
 	IsWebhookEnabled    bool    `json:"is_webhook_enabled"`
 }
 
-// CreateWebhook creates custom action
+// CreateWebhook creates webhook
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/outgoing_webhooks/
 func (service *WebhookService) CreateWebhook(opt *CreateWebhookOptions) (*Webhook, *http.Response, error) {
@@ -148,7 +148,7 @@ type UpdateWebhookOptions struct {
 	IsWebhookEnabled    bool    `json:"is_webhook_enabled"`
 }
 
-// UpdateWebhook updates custom action
+// UpdateWebhook updates webhook
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/outgoing_webhooks/
 func (service *WebhookService) UpdateWebhook(id string, opt *UpdateWebhookOptions) (*Webhook, *http.Response, error) {
@@ -171,7 +171,7 @@ func (service *WebhookService) UpdateWebhook(id string, opt *UpdateWebhookOption
 type DeleteWebhookOptions struct {
 }
 
-// DeleteWebhook deletes custom action.
+// DeleteWebhook deletes webhook.
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/outgoing_webhooks/
 func (service *WebhookService) DeleteWebhook(id string, opt *DeleteWebhookOptions) (*http.Response, error) {

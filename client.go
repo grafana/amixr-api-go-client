@@ -53,7 +53,6 @@ type Client struct {
 	Routes           *RouteService
 	SlackChannels    *SlackChannelService
 	UserGroups       *UserGroupService
-	CustomActions    *CustomActionService
 	OnCallShifts     *OnCallShiftService
 	Teams            *TeamService
 	Webhooks         *WebhookService
@@ -108,7 +107,6 @@ func newClient(url string) (*Client, error) {
 	c.Routes = NewRouteService(c)
 	c.SlackChannels = NewSlackChannelService(c)
 	c.UserGroups = NewUserGroupService(c)
-	c.CustomActions = NewCustomActionService(c)
 	c.OnCallShifts = NewOnCallShiftService(c)
 	c.Teams = NewTeamService(c)
 	c.Webhooks = NewWebhookService(c)
