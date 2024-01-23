@@ -38,6 +38,7 @@ type Client struct {
 	UserAgent  string
 	// List of Services. Keep in sync with func newClient
 	Alerts                *AlertService
+	AlertGroups           *AlertGroupService
 	Integrations          *IntegrationService
 	EscalationChains      *EscalationChainService
 	Escalations           *EscalationService
@@ -97,6 +98,7 @@ func newClient(url, grafana_url string) (*Client, error) {
 
 	// Create services. Keep in sync with Client struct
 	c.Alerts = NewAlertService(c)
+	c.AlertGroups = NewAlertGroupService(c)
 	c.Integrations = NewIntegrationService(c)
 	c.EscalationChains = NewEscalationChainService(c)
 	c.Escalations = NewEscalationService(c)
