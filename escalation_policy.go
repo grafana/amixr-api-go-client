@@ -35,6 +35,7 @@ type Escalation struct {
 	Duration                 *int      `json:"duration"`
 	PersonsToNotify          *[]string `json:"persons_to_notify"`
 	PersonsToNotifyEachTime  *[]string `json:"persons_to_notify_next_each_time"`
+	TeamToNotify             *string   `json:"team_to_notify"`
 	NotifyOnCallFromSchedule *string   `json:"notify_on_call_from_schedule"`
 	ActionToTrigger          *string   `json:"action_to_trigger"`
 	GroupToNotify            *string   `json:"group_to_notify"`
@@ -98,6 +99,7 @@ type CreateEscalationOptions struct {
 	Duration                    int       `json:"duration,omitempty"`
 	PersonsToNotify             *[]string `json:"persons_to_notify,omitempty"`
 	PersonsToNotifyNextEachTime *[]string `json:"persons_to_notify_next_each_time,omitempty"`
+	TeamToNotify                string    `json:"team_to_notify,omitempty"`
 	NotifyOnCallFromSchedule    string    `json:"notify_on_call_from_schedule,omitempty"`
 	ActionToTrigger             string    `json:"action_to_trigger,omitempty"`
 	GroupToNotify               string    `json:"group_to_notify,omitempty"`
@@ -135,6 +137,7 @@ type UpdateEscalationOptions struct {
 	Duration                 int       `json:"duration,omitempty"`
 	PersonsToNotify          *[]string `json:"persons_to_notify,omitempty"`
 	PersonsToNotifyEachTime  *[]string `json:"persons_to_notify_next_each_time,omitempty"`
+	TeamToNotify             string    `json:"team_to_notify,omitempty"`
 	NotifyOnCallFromSchedule string    `json:"notify_on_call_from_schedule,omitempty"`
 	ActionToTrigger          string    `json:"action_to_trigger,omitempty"`
 	GroupToNotify            string    `json:"group_to_notify,omitempty"`
