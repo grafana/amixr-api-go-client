@@ -57,6 +57,7 @@ type Client struct {
 	OnCallShifts     *OnCallShiftService
 	Teams            *TeamService
 	Webhooks         *WebhookService
+	ResolutionNotes  *ResolutionNoteService
 }
 
 func New(base_url, token string) (*Client, error) {
@@ -112,6 +113,7 @@ func newClient(url string) (*Client, error) {
 	c.OnCallShifts = NewOnCallShiftService(c)
 	c.Teams = NewTeamService(c)
 	c.Webhooks = NewWebhookService(c)
+	c.ResolutionNotes = NewResolutionNoteService(c)
 
 	return c, nil
 }
