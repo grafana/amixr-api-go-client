@@ -84,7 +84,7 @@ func (service *UserNotificationRuleService) GetUserNotificationRule(id string, o
 type CreateUserNotificationRuleOptions struct {
 	UserId    string `json:"user_id,omitempty"`
 	Position  *int   `json:"position,omitempty"`
-	Duration  int    `json:"duration,omitempty"`
+	Duration  *int   `json:"duration,omitempty"`
 	Important bool   `json:"important,omitempty"`
 	Type      string `json:"type,omitempty"`
 }
@@ -113,7 +113,7 @@ func (service *UserNotificationRuleService) CreateUserNotificationRule(opt *Crea
 
 type UpdateUserNotificationRuleOptions struct {
 	Position *int   `json:"position,omitempty"`
-	Duration int    `json:"duration,omitempty"`
+	Duration *int   `json:"duration,omitempty"`
 	Type     string `json:"type,omitempty"`
 }
 
