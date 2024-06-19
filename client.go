@@ -44,19 +44,19 @@ type Client struct {
 	limiter        *rate.Limiter
 	UserAgent      string
 	// List of Services. Keep in sync with func newClient
-	Alerts           *AlertService
-	Integrations     *IntegrationService
-	EscalationChains *EscalationChainService
-	Escalations      *EscalationService
-	Users            *UserService
-	Schedules        *ScheduleService
-	Routes           *RouteService
-	SlackChannels    *SlackChannelService
-	UserGroups       *UserGroupService
-	CustomActions    *CustomActionService
-	OnCallShifts     *OnCallShiftService
-	Teams            *TeamService
-	Webhooks         *WebhookService
+	Alerts                *AlertService
+	Integrations          *IntegrationService
+	EscalationChains      *EscalationChainService
+	Escalations           *EscalationService
+	Users                 *UserService
+	Schedules             *ScheduleService
+	Routes                *RouteService
+	SlackChannels         *SlackChannelService
+	UserGroups            *UserGroupService
+	OnCallShifts          *OnCallShiftService
+	Teams                 *TeamService
+	Webhooks              *WebhookService
+	UserNotificationRules *UserNotificationRuleService
 }
 
 func New(base_url, token string) (*Client, error) {
@@ -108,10 +108,10 @@ func newClient(url string) (*Client, error) {
 	c.Routes = NewRouteService(c)
 	c.SlackChannels = NewSlackChannelService(c)
 	c.UserGroups = NewUserGroupService(c)
-	c.CustomActions = NewCustomActionService(c)
 	c.OnCallShifts = NewOnCallShiftService(c)
 	c.Teams = NewTeamService(c)
 	c.Webhooks = NewWebhookService(c)
+	c.UserNotificationRules = NewUserNotificationRuleService(c)
 
 	return c, nil
 }
