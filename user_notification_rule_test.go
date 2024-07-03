@@ -36,11 +36,39 @@ func TestCreateUserNotificationRule(t *testing.T) {
 	})
 
 	createOptions := &CreateUserNotificationRuleOptions{
-		UserId:    testUserId,
-		Important: true,
-		Type:      "notify_by_sms",
+		UserId:      testUserId,
+		Important:   true,
+		Type:        "notify_by_sms",
+		ManualOrder: true,
 	}
 	userNotificationRule, _, err := client.UserNotificationRules.CreateUserNotificationRule(createOptions)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := testUserNotificationRule
+
+	if !reflect.DeepEqual(want, userNotificationRule) {
+		t.Errorf("returned\n %+v\n want\n %+v\n", userNotificationRule, want)
+	}
+}
+
+func TestUpdateUserNotificationRule(t *testing.T) {
+	mux, server, client := setup(t)
+	defer teardown(server)
+
+	url := fmt.Sprintf("/api/v1/%s/%s/", baseUrl, testId)
+	mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
+		testRequestMethod(t, r, "PUT")
+		fmt.Fprint(w, testUserNotificationRuleBody)
+	})
+
+	updateOptions := &UpdateUserNotificationRuleOptions{
+		Type:        "notify_by_sms",
+		ManualOrder: true,
+	}
+	userNotificationRule, _, err := client.UserNotificationRules.UpdateUserNotificationRule(testId, updateOptions)
 
 	if err != nil {
 		t.Fatal(err)
