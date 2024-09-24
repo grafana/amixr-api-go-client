@@ -55,6 +55,10 @@ var testIntegration = &Integration{
 			nil,
 			nil,
 		},
+		&TitleMessageTemplate{ // Mobile app
+			nil,
+			nil,
+		},
 	},
 }
 
@@ -102,7 +106,11 @@ var testIntegrationBody = `{
 		  "title":null,
 		  "message":null,
 		  "image_url":null
-	   }
+	   },
+	   "mobile_app":{
+		  "title":null,
+		  "message":null
+	   },
 	}
  }`
 
