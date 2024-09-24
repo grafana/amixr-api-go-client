@@ -57,6 +57,7 @@ type Templates struct {
 	PhoneCall         *TitleTemplate             `json:"phone_call"`
 	SMS               *TitleTemplate             `json:"sms"`
 	Email             *TitleMessageTemplate      `json:"email"`
+	MobileApp         *TitleMessageTemplate      `json:"mobile_app"`
 }
 
 type TitleMessageImageTemplate struct {
