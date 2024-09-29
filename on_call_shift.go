@@ -33,6 +33,7 @@ type OnCallShift struct {
 	Name                       string      `json:"name"`
 	Level                      int         `json:"level"`
 	Start                      string      `json:"start"`
+	Until                      string      `json:"until"`
 	Duration                   int         `json:"duration"`
 	Frequency                  *string     `json:"frequency"`
 	Users                      *[]string   `json:"users"`
@@ -101,6 +102,7 @@ type CreateOnCallShiftOptions struct {
 	Name                       string      `json:"name"`
 	Level                      *int        `json:"level,omitempty"`
 	Start                      string      `json:"start"`
+	Until                      string      `json:"until"`
 	Duration                   int         `json:"duration"`
 	Frequency                  *string     `json:"frequency"`
 	Users                      *[]string   `json:"users"`
@@ -142,6 +144,7 @@ type UpdateOnCallShiftOptions struct {
 	TeamId                     string      `json:"team_id"`
 	Level                      *int        `json:"level,omitempty"`
 	Start                      string      `json:"start"`
+	Until                      string      `json:"until"`
 	Duration                   int         `json:"duration"`
 	Frequency                  *string     `json:"frequency"`
 	Users                      *[]string   `json:"users"`
