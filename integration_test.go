@@ -110,7 +110,7 @@ var testIntegrationBody = `{
 	   "mobile_app":{
 		  "title":null,
 		  "message":null
-	   },
+	   }
 	}
  }`
 

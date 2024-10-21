@@ -40,6 +40,7 @@ type Client struct {
 	client         *retryablehttp.Client
 	token          string
 	baseURL        *url.URL
+	grafanaURL     *url.URL
 	disableRetries bool
 	limiter        *rate.Limiter
 	UserAgent      string
@@ -59,6 +60,22 @@ type Client struct {
 	UserNotificationRules *UserNotificationRuleService
 }
 
+func NewWithGrafanaURL(base_url, token, grafana_url string) (*Client, error) {
+	if token == "" {
+		return nil, fmt.Errorf("Token required")
+	}
+
+	if base_url == "" {
+		return nil, fmt.Errorf("BaseUrl required")
+	}
+	client, err := newClient(base_url, grafana_url)
+	if err != nil {
+		return nil, err
+	}
+	client.token = token
+	return client, nil
+}
+
 func New(base_url, token string) (*Client, error) {
 	if token == "" {
 		return nil, fmt.Errorf("Token required")
@@ -67,7 +84,7 @@ func New(base_url, token string) (*Client, error) {
 	if base_url == "" {
 		return nil, fmt.Errorf("BaseUrl required")
 	}
-	client, err := newClient(base_url)
+	client, err := newClient(base_url, "")
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +92,7 @@ func New(base_url, token string) (*Client, error) {
 	return client, nil
 }
 
-func newClient(url string) (*Client, error) {
+func newClient(url, grafana_url string) (*Client, error) {
 	c := &Client{}
 
 	// Configure the HTTP client.
@@ -96,6 +113,12 @@ func newClient(url string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	err = c.setGrafanaURL(grafana_url)
+	if err != nil {
+		return nil, err
+	}
+
 	c.UserAgent = defaultUserAgent
 
 	// Create services. Keep in sync with Client struct
@@ -135,6 +158,18 @@ func (c *Client) setBaseURL(urlStr string) error {
 	return nil
 }
 
+func (c *Client) setGrafanaURL(urlStr string) error {
+	if urlStr != "" {
+		grafanaUrl, err := url.Parse(urlStr)
+		if err != nil {
+			return err
+		}
+		c.grafanaURL = grafanaUrl
+	}
+
+	return nil
+}
+
 func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehttp.Request, error) {
 	u := *c.baseURL
 	unescaped, err := url.PathUnescape(path)
@@ -147,6 +182,9 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehtt
 	reqHeaders := make(http.Header)
 	reqHeaders.Set("Accept", "application/json")
 	reqHeaders.Set("Authorization", c.token)
+	if c.grafanaURL != nil {
+		reqHeaders.Set("X-Grafana-URL", c.grafanaURL.String())
+	}
 	if c.UserAgent != "" {
 		reqHeaders.Set("User-Agent", c.UserAgent)
 	}
@@ -316,5 +354,13 @@ func rateLimitBackoff(min, max time.Duration, attemptNum int, resp *http.Respons
 
 func (c *Client) BaseURL() *url.URL {
 	u := *c.baseURL
+	return &u
+}
+
+func (c *Client) GrafanaURL() *url.URL {
+	if c.grafanaURL == nil {
+		return nil
+	}
+	u := *c.grafanaURL
 	return &u
 }

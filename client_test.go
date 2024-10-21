@@ -47,6 +47,55 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
+func TestNewClientWithGrafanaURL(t *testing.T) {
+	c, err := NewWithGrafanaURL("base_url", "token", "grafana_url")
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	expectedBaseURL := "base_url/" + apiVersionPath
+
+	if c.BaseURL().String() != expectedBaseURL {
+		t.Errorf("NewClient BaseURL is %s, want %s", c.BaseURL().String(), expectedBaseURL)
+	}
+
+	if c.GrafanaURL().String() != "grafana_url" {
+		t.Errorf("NewClient GrafanaURL is %s, want grafana_url", c.GrafanaURL().String())
+	}
+}
+
+func TestCheckRequest(t *testing.T) {
+	c, err := New("base_url", "token")
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	req, err := c.NewRequest("GET", "test", nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	if req.Header.Get("X-Grafana-URL") != "" {
+		t.Errorf("X-Grafana-URL should not be set: %s", req.Header.Get("X-Grafana-URL"))
+	}
+}
+
+func TestCheckRequestSettingGrafanaURL(t *testing.T) {
+	c, err := NewWithGrafanaURL("base_url", "token", "grafana_url")
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	req, err := c.NewRequest("GET", "test", nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	if req.Header.Get("X-Grafana-URL") != "grafana_url" {
+		t.Errorf("X-Grafana-URL is not set correctly: %s", req.Header.Get("X-Grafana-URL"))
+	}
+}
+
 func TestCheckResponse(t *testing.T) {
 	c, err := New("base_url", "token")
 	if err != nil {
