@@ -13,13 +13,15 @@ var byDay = []string{"MO", "FR"}
 var interval = 2
 var users = []string{"U4DNY931HHJS5", "U6RV9WPSL6DFW"}
 
+var until = "2020-09-05T13:00:00"
+
 var testOnCallShift = &OnCallShift{
 	ID:        "OH3V5FYQEYJ6M",
 	TeamId:    "T3HRAP3K3IKOP",
 	Name:      "Test On-Call Shift",
 	Type:      "recurrent_event",
 	Start:     "2020-09-04T13:00:00",
-	Until:     "2020-09-05T13:00:00",
+	Until:     &until,
 	Level:     0,
 	Duration:  7200,
 	Frequency: &frequency,
