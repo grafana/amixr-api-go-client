@@ -61,10 +61,6 @@ type Client struct {
 }
 
 func NewWithGrafanaURL(base_url, token, grafana_url string) (*Client, error) {
-	if token == "" {
-		return nil, fmt.Errorf("Token required")
-	}
-
 	if base_url == "" {
 		return nil, fmt.Errorf("BaseUrl required")
 	}
@@ -77,10 +73,6 @@ func NewWithGrafanaURL(base_url, token, grafana_url string) (*Client, error) {
 }
 
 func New(base_url, token string) (*Client, error) {
-	if token == "" {
-		return nil, fmt.Errorf("Token required")
-	}
-
 	if base_url == "" {
 		return nil, fmt.Errorf("BaseUrl required")
 	}

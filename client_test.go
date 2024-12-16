@@ -47,8 +47,38 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
+func TestNewClientEmptyToken(t *testing.T) {
+	c, err := New("base_url", "")
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	expectedBaseURL := "base_url/" + apiVersionPath
+
+	if c.BaseURL().String() != expectedBaseURL {
+		t.Errorf("NewClient BaseURL is %s, want %s", c.BaseURL().String(), expectedBaseURL)
+	}
+}
+
 func TestNewClientWithGrafanaURL(t *testing.T) {
 	c, err := NewWithGrafanaURL("base_url", "token", "grafana_url")
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	expectedBaseURL := "base_url/" + apiVersionPath
+
+	if c.BaseURL().String() != expectedBaseURL {
+		t.Errorf("NewClient BaseURL is %s, want %s", c.BaseURL().String(), expectedBaseURL)
+	}
+
+	if c.GrafanaURL().String() != "grafana_url" {
+		t.Errorf("NewClient GrafanaURL is %s, want grafana_url", c.GrafanaURL().String())
+	}
+}
+
+func TestNewClientWithGrafanaURLEmptyToken(t *testing.T) {
+	c, err := NewWithGrafanaURL("base_url", "", "grafana_url")
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
