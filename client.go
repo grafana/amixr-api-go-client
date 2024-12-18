@@ -37,7 +37,7 @@ type PaginatedResponse struct {
 
 type Client struct {
 	// HTTP client used to communicate with the API.
-	client         *retryablehttp.Client
+	Client         *retryablehttp.Client
 	token          string
 	baseURL        *url.URL
 	grafanaURL     *url.URL
@@ -88,7 +88,7 @@ func newClient(url, grafana_url string) (*Client, error) {
 	c := &Client{}
 
 	// Configure the HTTP client.
-	c.client = &retryablehttp.Client{
+	c.Client = &retryablehttp.Client{
 		Backoff:      c.retryHTTPBackoff,
 		CheckRetry:   c.retryHTTPCheck,
 		RetryWaitMin: 100 * time.Millisecond,
@@ -220,7 +220,7 @@ func (c *Client) Do(req *retryablehttp.Request, v interface{}) (*http.Response, 
 		return nil, err
 	}
 
-	resp, err := c.client.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
