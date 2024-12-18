@@ -314,7 +314,7 @@ func (c *Client) retryHTTPCheck(ctx context.Context, resp *http.Response, err er
 	if err != nil {
 		return false, err
 	}
-	if !c.disableRetries && (resp.StatusCode == 429 || resp.StatusCode >= 500) {
+	if !c.disableRetries && (resp.StatusCode == 429 || resp.StatusCode == 403 || resp.StatusCode >= 500) {
 		return true, nil
 	}
 	return false, nil
