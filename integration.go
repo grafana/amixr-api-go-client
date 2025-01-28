@@ -35,6 +35,7 @@ type Integration struct {
 	Type           string        `json:"type"`
 	DefaultRoute   *DefaultRoute `json:"default_route"`
 	Templates      *Templates    `json:"templates"`
+	Labels         []*Label      `json:"labels"`
 }
 
 type DefaultRoute struct {
@@ -81,6 +82,11 @@ type MessageTemplate struct {
 
 type ImageURLTemplate struct {
 	ImageURL *string `json:"image_url"`
+}
+
+type Label struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 type ListIntegrationOptions struct {
@@ -136,6 +142,7 @@ type CreateIntegrationOptions struct {
 	Type         string        `json:"type,omitempty"`
 	Templates    *Templates    `json:"templates,omitempty"`
 	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
+	Labels       []*Label      `json:"labels,omitempty"`
 }
 
 // CreateIntegration creates integration with type, team_id and optional given name.
@@ -163,6 +170,7 @@ type UpdateIntegrationOptions struct {
 	TeamId       string        `json:"team_id"`
 	Templates    *Templates    `json:"templates,omitempty"`
 	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
+	Labels       []*Label      `json:"labels,omitempty"`
 }
 
 // UpdateIntegration updates integration with new templates, name and default route.

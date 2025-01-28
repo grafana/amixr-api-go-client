@@ -60,6 +60,12 @@ var testIntegration = &Integration{
 			nil,
 		},
 	},
+	Labels: []*Label{
+		&Label{
+			Key: "Flip",
+			Value: "Flop",
+		},
+	},
 }
 
 var testIntegrationBody = `{
@@ -111,7 +117,13 @@ var testIntegrationBody = `{
 		  "title":null,
 		  "message":null
 	   }
-	}
+	},
+	"labels":[
+		{
+			"key": "Flip",
+			"value": "Flop"
+		}
+	]
  }`
 
 func TestCreateIntegration(t *testing.T) {
