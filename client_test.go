@@ -157,3 +157,30 @@ func TestCheckResponse(t *testing.T) {
 		t.Errorf("Expected error: %s, got %s", want, errResp.Error())
 	}
 }
+
+func TestRatelimitRetry(t *testing.T) {
+	mux, server, client := setup(t)
+	defer teardown(server)
+
+	requestCount := 0
+	mux.HandleFunc("/api/v1/test", func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		w.Header().Set("Retry-After", "0")
+		w.WriteHeader(http.StatusTooManyRequests)
+	})
+
+	req, err := client.NewRequest("GET", "test", nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	_, err = client.Do(req, nil)
+	expectedErr := fmt.Sprintf("GET %s giving up after 5 attempt(s)", req.URL)
+	if err.Error() != expectedErr {
+		t.Fatalf("Expected error: %s, got %s", expectedErr, err.Error())
+	}
+
+	if requestCount != 5 {
+		t.Errorf("Expected 5 requests (1 original + 4 retries), got %d", requestCount)
+	}
+}
