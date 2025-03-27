@@ -47,10 +47,13 @@ type SlackSchedule struct {
 
 type ListScheduleOptions struct {
 	ListOptions
-	Name string `url:"name,omitempty" json:"name,omitempty"`
+	Name   string `url:"name,omitempty" json:"name,omitempty"`
+	TeamID string `url:"team_id,omitempty" json:"team_id,omitempty"`
 }
 
 // ListSchedules fetches all schedules for authorized organization
+// Optional filter:
+// - team_id: Exact match filter for team ID
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/schedules/#list-schedules
 func (service *ScheduleService) ListSchedules(opt *ListScheduleOptions) (*PaginatedSchedulesResponse, *http.Response, error) {
