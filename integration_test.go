@@ -62,8 +62,12 @@ var testIntegration = &Integration{
 	},
 	Labels: []*Label{
 		&Label{
-			Key: "Flip",
-			Value: "Flop",
+			Key: KeyValueName{
+				Name: "Flip",
+			},
+			Value: KeyValueName{
+				Name: "Flop",
+			},
 		},
 	},
 }
@@ -120,8 +124,12 @@ var testIntegrationBody = `{
 	},
 	"labels":[
 		{
-			"key": "Flip",
-			"value": "Flop"
+			"key": {
+				"name": "Flip"
+			},
+			"value": {
+				"name": "Flop"
+			}
 		}
 	]
  }`

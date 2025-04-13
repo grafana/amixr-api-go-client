@@ -85,8 +85,12 @@ type ImageURLTemplate struct {
 }
 
 type Label struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key   KeyValueName `json:"key"`
+	Value KeyValueName `json:"value"`
+}
+
+type KeyValueName struct {
+	Name	string `json:"name"`
 }
 
 type ListIntegrationOptions struct {
