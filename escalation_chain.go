@@ -26,10 +26,16 @@ type PaginatedEscalationChainsResponse struct {
 	EscalationChains []*EscalationChain `json:"results"`
 }
 
+type EscalationChainStep struct {
+	ID       string `json:"id"`
+	Position int    `json:"position"`
+}
+
 type EscalationChain struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	TeamId string `json:"team_id"`
+	ID     string                 `json:"id"`
+	Name   string                 `json:"name"`
+	TeamId string                 `json:"team_id"`
+	Steps  []*EscalationChainStep `json:"steps"`
 }
 
 type ListEscalationChainOptions struct {
