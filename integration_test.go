@@ -70,6 +70,16 @@ var testIntegration = &Integration{
 			},
 		},
 	},
+	DynamicLabels: []*Label{
+		&Label{
+			Key: KeyValueName{
+				Name: "",
+			},
+			Value: KeyValueName{
+				Name: "Flop",
+			},
+		},
+	},
 }
 
 var testIntegrationBody = `{

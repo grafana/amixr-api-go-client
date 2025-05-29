@@ -36,6 +36,7 @@ type Integration struct {
 	DefaultRoute   *DefaultRoute `json:"default_route"`
 	Templates      *Templates    `json:"templates"`
 	Labels         []*Label      `json:"labels"`
+	DynamicLabels  []*Label      `json:"labels"`
 }
 
 type DefaultRoute struct {
@@ -90,7 +91,7 @@ type Label struct {
 }
 
 type KeyValueName struct {
-	Name	string `json:"name"`
+	Name string `json:"name"`
 }
 
 type ListIntegrationOptions struct {
@@ -141,12 +142,13 @@ func (service *IntegrationService) GetIntegration(id string, opt *GetIntegration
 }
 
 type CreateIntegrationOptions struct {
-	TeamId       string        `json:"team_id"`
-	Name         string        `json:"name,omitempty"`
-	Type         string        `json:"type,omitempty"`
-	Templates    *Templates    `json:"templates,omitempty"`
-	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
-	Labels       []*Label      `json:"labels,omitempty"`
+	TeamId        string        `json:"team_id"`
+	Name          string        `json:"name,omitempty"`
+	Type          string        `json:"type,omitempty"`
+	Templates     *Templates    `json:"templates,omitempty"`
+	DefaultRoute  *DefaultRoute `json:"default_route,omitempty"`
+	Labels        []*Label      `json:"labels,omitempty"`
+	DynamicLabels []*Label      `json:"dynamic_labels,omitempty"`
 }
 
 // CreateIntegration creates integration with type, team_id and optional given name.
@@ -170,11 +172,12 @@ func (service *IntegrationService) CreateIntegration(opt *CreateIntegrationOptio
 }
 
 type UpdateIntegrationOptions struct {
-	Name         string        `json:"name,omitempty"`
-	TeamId       string        `json:"team_id"`
-	Templates    *Templates    `json:"templates,omitempty"`
-	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
-	Labels       []*Label      `json:"labels,omitempty"`
+	Name          string        `json:"name,omitempty"`
+	TeamId        string        `json:"team_id"`
+	Templates     *Templates    `json:"templates,omitempty"`
+	DefaultRoute  *DefaultRoute `json:"default_route,omitempty"`
+	Labels        []*Label      `json:"labels,omitempty"`
+	DynamicLabels []*Label      `json:"dynamic_labels,omitempty"`
 }
 
 // UpdateIntegration updates integration with new templates, name and default route.
