@@ -36,7 +36,7 @@ type Integration struct {
 	DefaultRoute   *DefaultRoute `json:"default_route"`
 	Templates      *Templates    `json:"templates"`
 	Labels         []*Label      `json:"labels"`
-	DynamicLabels  []*Label      `json:"labels"`
+	DynamicLabels  []*Label      `json:"dynamic_labels"`
 }
 
 type DefaultRoute struct {
