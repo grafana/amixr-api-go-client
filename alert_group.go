@@ -3,6 +3,7 @@ package aapi
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 )
@@ -88,7 +89,7 @@ func validateTimeRange(timeRange string) error {
 // ListAlertGroupOptions represent filter options supported by the on-call alert_groups API.
 type ListAlertGroupOptions struct {
 	ListOptions
-	AlertGroupID  string `url:"alert_group_id,omitempty" json:"alert_group_id,omitempty"`
+	AlertGroupID  string `url:"id,omitempty" json:"alert_group_id,omitempty"`
 	RouteID       string `url:"route_id,omitempty" json:"route_id,omitempty"`
 	IntegrationID string `url:"integration_id,omitempty" json:"integration_id,omitempty" `
 	State         string `url:"state,omitempty" json:"state,omitempty" `
@@ -136,4 +137,26 @@ func (service *AlertGroupService) ListAlertGroups(opt *ListAlertGroupOptions) (*
 	}
 
 	return alertGroups, resp, err
+}
+
+// GetAlertGroup fetches a specific alert group by ID.
+//
+// https://grafana.com/docs/oncall/latest/oncall-api-reference/alertgroups/
+func (service *AlertGroupService) GetAlertGroup(id string) (*AlertGroup, *http.Response, error) {
+	// Sanitize the ID
+	sanitizedID := url.PathEscape(id)
+	u := fmt.Sprintf("%s/%s/", service.url, sanitizedID)
+
+	req, err := service.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var alertGroup *AlertGroup
+	resp, err := service.client.Do(req, &alertGroup)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return alertGroup, resp, err
 }

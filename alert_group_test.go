@@ -44,7 +44,7 @@ func TestListAlertGroup(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/alert_groups/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testAlertGroupBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testAlertGroupBody)
 	})
 
 	options := &ListAlertGroupOptions{
@@ -175,6 +175,29 @@ func TestListAlertGroupQueryURL(t *testing.T) {
 			expectedURL: "/api/v1/alert_groups/?label=env%3Aprod&label=severity%3Ahigh&label=team%3Abackend",
 		},
 		{
+			name: "time range",
+			options: &ListAlertGroupOptions{
+				StartedAt: "2025-09-19T10:00:00_2025-09-20T10:00:00",
+			},
+			expectedURL: "/api/v1/alert_groups/?started_at=2025-09-19T10%3A00%3A00_2025-09-20T10%3A00%3A00",
+		},
+		{
+			name: "labels and time range",
+			options: &ListAlertGroupOptions{
+				Labels:    []string{"cluster:prod-eu-west-5"},
+				StartedAt: "2025-09-19T10:00:00_2025-09-20T10:00:00",
+			},
+			expectedURL: "/api/v1/alert_groups/?label=cluster%3Aprod-eu-west-5&started_at=2025-09-19T10%3A00%3A00_2025-09-20T10%3A00%3A00",
+		},
+		{
+			name: "team ID and labels",
+			options: &ListAlertGroupOptions{
+				TeamID: "TMKSD2R5W9JFA",
+				Labels: []string{"cluster:prod-eu-west-5"},
+			},
+			expectedURL: "/api/v1/alert_groups/?label=cluster%3Aprod-eu-west-5&team_id=TMKSD2R5W9JFA",
+		},
+		{
 			name: "empty labels",
 			options: &ListAlertGroupOptions{
 				Labels: []string{},
@@ -206,5 +229,59 @@ func TestListAlertGroupQueryURL(t *testing.T) {
 				t.Errorf("Request URL = %v, want %v", capturedURL, tt.expectedURL)
 			}
 		})
+	}
+}
+
+func TestGetAlertGroup(t *testing.T) {
+	mux, server, client := setup(t)
+	defer teardown(server)
+
+	mux.HandleFunc("/api/v1/alert_groups/I68T24C13IFW1/", func(w http.ResponseWriter, r *http.Request) {
+		testRequestMethod(t, r, "GET")
+		fmt.Fprint(w, testAlertGroupBody)
+	})
+
+	alertGroup, resp, err := client.AlertGroups.GetAlertGroup("I68T24C13IFW1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	if !reflect.DeepEqual(testAlertGroup, alertGroup) {
+		t.Errorf("GetAlertGroup returned\n %+v, \nwant\n %+v", alertGroup, testAlertGroup)
+	}
+}
+
+func TestGetAlertGroupWithSpecialCharacters(t *testing.T) {
+	mux, server, client := setup(t)
+	defer teardown(server)
+
+	// Test with ID that contains special characters
+	testID := "I68T24C13IFW1/../admin"
+	expectedPath := "/api/v1/alert_groups/I68T24C13IFW1%2F..%2Fadmin/"
+
+	mux.HandleFunc("/api/v1/alert_groups/I68T24C13IFW1%2F..%2Fadmin/", func(w http.ResponseWriter, r *http.Request) {
+		testRequestMethod(t, r, "GET")
+		// Verify the path is properly escaped
+		if r.URL.Path != expectedPath {
+			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.Path)
+		}
+		fmt.Fprint(w, testAlertGroupBody)
+	})
+
+	alertGroup, resp, err := client.AlertGroups.GetAlertGroup(testID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	if !reflect.DeepEqual(testAlertGroup, alertGroup) {
+		t.Errorf("GetAlertGroup returned\n %+v, \nwant\n %+v", alertGroup, testAlertGroup)
 	}
 }
