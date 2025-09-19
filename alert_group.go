@@ -3,6 +3,7 @@ package aapi
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 )
@@ -142,7 +143,9 @@ func (service *AlertGroupService) ListAlertGroups(opt *ListAlertGroupOptions) (*
 //
 // https://grafana.com/docs/oncall/latest/oncall-api-reference/alertgroups/
 func (service *AlertGroupService) GetAlertGroup(id string) (*AlertGroup, *http.Response, error) {
-	u := fmt.Sprintf("%s/%s/", service.url, id)
+	// Sanitize the ID
+	sanitizedID := url.PathEscape(id)
+	u := fmt.Sprintf("%s/%s/", service.url, sanitizedID)
 
 	req, err := service.client.NewRequest("GET", u, nil)
 	if err != nil {

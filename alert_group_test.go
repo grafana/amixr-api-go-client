@@ -254,3 +254,34 @@ func TestGetAlertGroup(t *testing.T) {
 		t.Errorf("GetAlertGroup returned\n %+v, \nwant\n %+v", alertGroup, testAlertGroup)
 	}
 }
+
+func TestGetAlertGroupWithSpecialCharacters(t *testing.T) {
+	mux, server, client := setup(t)
+	defer teardown(server)
+
+	// Test with ID that contains special characters
+	testID := "I68T24C13IFW1/../admin"
+	expectedPath := "/api/v1/alert_groups/I68T24C13IFW1%2F..%2Fadmin/"
+
+	mux.HandleFunc("/api/v1/alert_groups/I68T24C13IFW1%2F..%2Fadmin/", func(w http.ResponseWriter, r *http.Request) {
+		testRequestMethod(t, r, "GET")
+		// Verify the path is properly escaped
+		if r.URL.Path != expectedPath {
+			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.Path)
+		}
+		fmt.Fprint(w, testAlertGroupBody)
+	})
+
+	alertGroup, resp, err := client.AlertGroups.GetAlertGroup(testID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	if !reflect.DeepEqual(testAlertGroup, alertGroup) {
+		t.Errorf("GetAlertGroup returned\n %+v, \nwant\n %+v", alertGroup, testAlertGroup)
+	}
+}
