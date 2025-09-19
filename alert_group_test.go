@@ -44,7 +44,7 @@ func TestListAlertGroup(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/alert_groups/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testAlertGroupBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testAlertGroupBody)
 	})
 
 	options := &ListAlertGroupOptions{
@@ -173,6 +173,29 @@ func TestListAlertGroupQueryURL(t *testing.T) {
 				Labels: []string{"env:prod", "severity:high", "team:backend"},
 			},
 			expectedURL: "/api/v1/alert_groups/?label=env%3Aprod&label=severity%3Ahigh&label=team%3Abackend",
+		},
+		{
+			name: "time range",
+			options: &ListAlertGroupOptions{
+				StartedAt: "2025-09-19T10:00:00_2025-09-20T10:00:00",
+			},
+			expectedURL: "/api/v1/alert_groups/?started_at=2025-09-19T10%3A00%3A00_2025-09-20T10%3A00%3A00",
+		},
+		{
+			name: "labels and time range",
+			options: &ListAlertGroupOptions{
+				Labels:    []string{"cluster:prod-eu-west-5"},
+				StartedAt: "2025-09-19T10:00:00_2025-09-20T10:00:00",
+			},
+			expectedURL: "/api/v1/alert_groups/?label=cluster%3Aprod-eu-west-5&started_at=2025-09-19T10%3A00%3A00_2025-09-20T10%3A00%3A00",
+		},
+		{
+			name: "team ID and labels",
+			options: &ListAlertGroupOptions{
+				TeamID: "TMKSD2R5W9JFA",
+				Labels: []string{"cluster:prod-eu-west-5"},
+			},
+			expectedURL: "/api/v1/alert_groups/?label=cluster%3Aprod-eu-west-5&team_id=TMKSD2R5W9JFA",
 		},
 		{
 			name: "empty labels",
