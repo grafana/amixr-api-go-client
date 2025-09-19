@@ -137,3 +137,23 @@ func (service *AlertGroupService) ListAlertGroups(opt *ListAlertGroupOptions) (*
 
 	return alertGroups, resp, err
 }
+
+// GetAlertGroup fetches a specific alert group by ID.
+//
+// https://grafana.com/docs/oncall/latest/oncall-api-reference/alertgroups/
+func (service *AlertGroupService) GetAlertGroup(id string) (*AlertGroup, *http.Response, error) {
+	u := fmt.Sprintf("%s/%s/", service.url, id)
+
+	req, err := service.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var alertGroup *AlertGroup
+	resp, err := service.client.Do(req, &alertGroup)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return alertGroup, resp, err
+}

@@ -231,3 +231,26 @@ func TestListAlertGroupQueryURL(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAlertGroup(t *testing.T) {
+	mux, server, client := setup(t)
+	defer teardown(server)
+
+	mux.HandleFunc("/api/v1/alert_groups/I68T24C13IFW1/", func(w http.ResponseWriter, r *http.Request) {
+		testRequestMethod(t, r, "GET")
+		fmt.Fprint(w, testAlertGroupBody)
+	})
+
+	alertGroup, resp, err := client.AlertGroups.GetAlertGroup("I68T24C13IFW1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	if !reflect.DeepEqual(testAlertGroup, alertGroup) {
+		t.Errorf("GetAlertGroup returned\n %+v, \nwant\n %+v", alertGroup, testAlertGroup)
+	}
+}
