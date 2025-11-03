@@ -42,6 +42,8 @@ type Escalation struct {
 	Important                *bool     `json:"important"`
 	NotifyIfTimeFrom         *string   `json:"notify_if_time_from"`
 	NotifyIfTimeTo           *string   `json:"notify_if_time_to"`
+	NumAlertsInWindow        *int      `json:"num_alerts_in_window"`
+	NumMinutesInWindow       *int      `json:"num_minutes_in_window"`
 	Severity                 *string   `json:"severity"`
 }
 
@@ -108,6 +110,8 @@ type CreateEscalationOptions struct {
 	Important                   *bool     `json:"important,omitempty"`
 	NotifyIfTimeFrom            string    `json:"notify_if_time_from,omitempty"`
 	NotifyIfTimeTo              string    `json:"notify_if_time_to,omitempty"`
+	NumAlertsInWindow           int       `json:"num_alerts_in_window,omitempty"`
+	NumMinutesInWindow          int       `json:"num_minutes_in_window,omitempty"`
 	Severity                    string    `json:"severity,omitempty"`
 }
 
@@ -147,6 +151,8 @@ type UpdateEscalationOptions struct {
 	Important                *bool     `json:"important,omitempty"`
 	NotifyIfTimeFrom         string    `json:"notify_if_time_from,omitempty"`
 	NotifyIfTimeTo           string    `json:"notify_if_time_to,omitempty"`
+	NumAlertsInWindow        int       `json:"num_alerts_in_window,omitempty"`
+	NumMinutesInWindow       int       `json:"num_minutes_in_window,omitempty"`
 	Severity                 string    `json:"severity,omitempty"`
 }
 
