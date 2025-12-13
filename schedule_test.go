@@ -57,7 +57,6 @@ func TestCreateSchedule(t *testing.T) {
 		},
 	}
 	schedule, _, err := client.Schedules.CreateSchedule(createOptions)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +127,6 @@ func TestGetSchedule(t *testing.T) {
 	options := &GetScheduleOptions{}
 
 	schedule, _, err := client.Schedules.GetSchedule("SBM7DV7BKFUYU", options)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,5 +135,52 @@ func TestGetSchedule(t *testing.T) {
 
 	if !reflect.DeepEqual(want, schedule) {
 		t.Errorf("returned\n %+v\n want\n %+v\n", schedule, want)
+	}
+}
+
+var testFinalShift = FinalShift{
+	UserPk:       "UC2CHRT5SD34X",
+	UserEmail:    "alice@example.com",
+	UserUsername: "alice",
+	ShiftStart:   "2023-01-02T09:00:00Z",
+	ShiftEnd:     "2023-01-02T17:00:00Z",
+}
+
+var testFinalShiftsBody = `{
+	"user_pk": "UC2CHRT5SD34X",
+	"user_email": "alice@example.com",
+	"user_username": "alice",
+	"shift_start": "2023-01-02T09:00:00Z",
+  	"shift_end": "2023-01-02T17:00:00Z"
+}`
+
+func TestGetSchedulesFinalShifts(t *testing.T) {
+	mux, server, client := setup(t)
+	defer teardown(server)
+
+	mux.HandleFunc("/api/v1/schedules/SBM7DV7BKFUYU/final_shifts", func(w http.ResponseWriter, r *http.Request) {
+		testRequestMethod(t, r, "GET")
+		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testFinalShiftsBody))
+	})
+
+	options := &GetSchdulesFinalShiftOptions{StartDate: "2023-01-02", EndDate: "2023-01-03"}
+
+	finalShifts, _, err := client.Schedules.GetSchedulesFinalShifts(options, "SBM7DV7BKFUYU")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := &PaginatedFinalShiftsResponse{
+		PaginatedResponse: PaginatedResponse{
+			Count:    1,
+			Next:     nil,
+			Previous: nil,
+		},
+		FinalShifts: []*FinalShift{
+			&testFinalShift,
+		},
+	}
+	if !reflect.DeepEqual(want, finalShifts) {
+		t.Errorf("returned\n %+v, \nwant\n %+v", finalShifts, want)
 	}
 }
