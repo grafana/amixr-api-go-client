@@ -188,16 +188,16 @@ type FinalShift struct {
 	ShiftEnd     string `json:"shift_end"`
 }
 
-type GetSchdulesFinalShiftOptions struct {
+type ListFinalShiftOptions struct {
 	ListOptions
 	StartDate string `url:"start_date" json:"start_date"`
 	EndDate   string `url:"end_date" json:"end_date"`
 }
 
-// GetSchedulesFinalShifts fetches the final shifts for schedule
+// ListFinalShifts fetches the final shifts for schedule
 //
 // https://grafana.com/docs/oncall/latest/oncall-api-reference/schedules/#export-a-schedules-final-shifts
-func (service *ScheduleService) GetSchedulesFinalShifts(opt *GetSchdulesFinalShiftOptions, id string) (*PaginatedFinalShiftsResponse, *http.Response, error) {
+func (service *ScheduleService) ListFinalShifts(opt *ListFinalShiftOptions, id string) (*PaginatedFinalShiftsResponse, *http.Response, error) {
 	u := fmt.Sprintf("%s/%s/final_shifts", service.url, id)
 
 	req, err := service.client.NewRequest("GET", u, opt)

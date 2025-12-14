@@ -154,7 +154,7 @@ var testFinalShiftsBody = `{
   	"shift_end": "2023-01-02T17:00:00Z"
 }`
 
-func TestGetSchedulesFinalShifts(t *testing.T) {
+func TestListFinalShifts(t *testing.T) {
 	mux, server, client := setup(t)
 	defer teardown(server)
 
@@ -163,9 +163,9 @@ func TestGetSchedulesFinalShifts(t *testing.T) {
 		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testFinalShiftsBody))
 	})
 
-	options := &GetSchdulesFinalShiftOptions{StartDate: "2023-01-02", EndDate: "2023-01-03"}
+	options := &ListFinalShiftOptions{StartDate: "2023-01-02", EndDate: "2023-01-03"}
 
-	finalShifts, _, err := client.Schedules.GetSchedulesFinalShifts(options, "SBM7DV7BKFUYU")
+	finalShifts, _, err := client.Schedules.ListFinalShifts(options, "SBM7DV7BKFUYU")
 	if err != nil {
 		t.Fatal(err)
 	}
