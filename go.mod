@@ -1,8 +1,10 @@
 module github.com/grafana/amixr-api-go-client
 
-go 1.16
+go 1.23
 
 require (
 	github.com/google/go-querystring v1.0.0
-	github.com/hashicorp/go-retryablehttp v0.7.7
+	github.com/hashicorp/go-retryablehttp v0.7.8
 )
+
+require github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
