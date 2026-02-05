@@ -11,11 +11,12 @@ var key = "key"
 var signal = "signal"
 var source_link = "source_link"
 var testIntegration = &Integration{
-	ID:     "CFRPV98RPR1U8",
-	TeamId: "T3HRAP3K3IKOP",
-	Name:   "Test Grafana",
-	Type:   "grafana",
-	Link:   "https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
+	ID:           "CFRPV98RPR1U8",
+	TeamId:       "T3HRAP3K3IKOP",
+	Name:         "Test Grafana",
+	Type:         "grafana",
+	Link:         "https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
+	InboundEmail: "",
 	DefaultRoute: &DefaultRoute{
 		ID: "RIYGUJXCPFHXY",
 	},
@@ -88,6 +89,7 @@ var testIntegrationBody = `{
 	"name":"Test Grafana",
 	"type":"grafana",
 	"link":"https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
+	"inbound_email": "",
 	"default_route":{
 	   "id":"RIYGUJXCPFHXY"
 	},
