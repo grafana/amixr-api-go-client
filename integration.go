@@ -31,6 +31,7 @@ type Integration struct {
 	TeamId         string        `json:"team_id"`
 	Name           string        `json:"name"`
 	Link           string        `json:"link"`
+	InboundEmail   string        `json:"inbound_email"`
 	IncidentsCount int           `json:"incidents_count"`
 	Type           string        `json:"type"`
 	DefaultRoute   *DefaultRoute `json:"default_route"`
