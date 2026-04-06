@@ -149,6 +149,9 @@ func (c *Client) setGrafanaURL(urlStr string) error {
 func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehttp.Request, error) {
 	u := *c.baseURL
 	unescaped, err := url.PathUnescape(path)
+	if err != nil {
+		return nil, err
+	}
 
 	// Set the encoded path data
 	u.RawPath = c.baseURL.Path + path
@@ -185,6 +188,9 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehtt
 	}
 
 	req, err := retryablehttp.NewRequest(method, u.String(), body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Set the request specific headers.
 	for k, v := range reqHeaders {
