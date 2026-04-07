@@ -40,7 +40,7 @@ func TestListResolutionNotes(t *testing.T) {
 		AlertGroupID: "I68T24C13IFW1",
 	}
 
-	alerts, _, err := client.ResolutionNotes.ListResolutionNotes(options)
+	resolutionNotes, _, err := client.ResolutionNotes.ListResolutionNotes(options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,9 +56,9 @@ func TestListResolutionNotes(t *testing.T) {
 		},
 	}
 
-	if !reflect.DeepEqual(want, alerts) {
-		fmt.Println(alerts.ResolutionNotes[0])
+	if !reflect.DeepEqual(want, resolutionNotes) {
+		fmt.Println(resolutionNotes.ResolutionNotes[0])
 		fmt.Println(want.ResolutionNotes[0])
-		t.Errorf(" returned\n %+v, \nwant\n %+v", alerts, want)
+		t.Errorf(" returned\n %+v, \nwant\n %+v", resolutionNotes, want)
 	}
 }
