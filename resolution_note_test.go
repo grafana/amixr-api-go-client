@@ -27,7 +27,7 @@ var testResolutionNoteBody = `{
 
 
 
-func TestListResolutionNote(t *testing.T) {
+func TestListResolutionNotes(t *testing.T) {
 	mux, server, client := setup(t)
 	defer teardown(server)
 

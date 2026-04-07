@@ -13,7 +13,7 @@ type ResolutionNoteService struct {
 	url    string
 }
 
-// NewResolutionNoteService creates an ResolutionNoteService with the defined URL.
+// NewResolutionNoteService creates a ResolutionNoteService with the defined URL.
 func NewResolutionNoteService(client *Client) *ResolutionNoteService {
 	resolutionNoteService := ResolutionNoteService{}
 	resolutionNoteService.client = client
@@ -45,7 +45,7 @@ type ListResolutionNoteOptions struct {
 
 // ListResolutionNotes fetches all on-call resolution notes associated to an alert group for authorized organization.
 //
-// https://grafana.com/docs/oncall/latest/oncall-api-reference/alertgroups/
+// https://grafana.com/docs/oncall/latest/oncall-api-reference/resolution_notes/
 func (service *ResolutionNoteService) ListResolutionNotes(opt *ListResolutionNoteOptions) (*PaginatedResolutionNotesResponse, *http.Response, error) {
 	u := fmt.Sprintf("%s/", service.url)
 
