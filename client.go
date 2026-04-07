@@ -1,23 +1,17 @@
 package aapi
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google/go-querystring/query"
 	"github.com/hashicorp/go-retryablehttp"
-	"golang.org/x/time/rate"
 )
 
 const (
@@ -37,38 +31,34 @@ type PaginatedResponse struct {
 
 type Client struct {
 	// HTTP client used to communicate with the API.
-	client         *retryablehttp.Client
-	token          string
-	baseURL        *url.URL
-	disableRetries bool
-	limiter        *rate.Limiter
-	UserAgent      string
+	client     *retryablehttp.Client
+	token      string
+	baseURL    *url.URL
+	grafanaURL *url.URL
+	UserAgent  string
 	// List of Services. Keep in sync with func newClient
-	Alerts           *AlertService
-	Integrations     *IntegrationService
-	EscalationChains *EscalationChainService
-	Escalations      *EscalationService
-	Users            *UserService
-	Schedules        *ScheduleService
-	Routes           *RouteService
-	SlackChannels    *SlackChannelService
-	UserGroups       *UserGroupService
-	CustomActions    *CustomActionService
-	OnCallShifts     *OnCallShiftService
-	Teams            *TeamService
-	Webhooks         *WebhookService
-	ResolutionNotes  *ResolutionNoteService
+	Alerts                *AlertService
+	AlertGroups           *AlertGroupService
+	Integrations          *IntegrationService
+	EscalationChains      *EscalationChainService
+	Escalations           *EscalationService
+	Users                 *UserService
+	Schedules             *ScheduleService
+	Routes                *RouteService
+	SlackChannels         *SlackChannelService
+	UserGroups            *UserGroupService
+	OnCallShifts          *OnCallShiftService
+	Teams                 *TeamService
+	Webhooks              *WebhookService
+	UserNotificationRules *UserNotificationRuleService
+	ResolutionNotes       *ResolutionNoteService
 }
 
-func New(base_url, token string) (*Client, error) {
-	if token == "" {
-		return nil, fmt.Errorf("Token required")
-	}
-
+func NewWithGrafanaURL(base_url, token, grafana_url string) (*Client, error) {
 	if base_url == "" {
 		return nil, fmt.Errorf("BaseUrl required")
 	}
-	client, err := newClient(base_url)
+	client, err := newClient(base_url, grafana_url)
 	if err != nil {
 		return nil, err
 	}
@@ -76,31 +66,40 @@ func New(base_url, token string) (*Client, error) {
 	return client, nil
 }
 
-func newClient(url string) (*Client, error) {
+func New(base_url, token string) (*Client, error) {
+	if base_url == "" {
+		return nil, fmt.Errorf("BaseUrl required")
+	}
+	client, err := newClient(base_url, "")
+	if err != nil {
+		return nil, err
+	}
+	client.token = token
+	return client, nil
+}
+
+func newClient(url, grafana_url string) (*Client, error) {
 	c := &Client{}
 
-	// Configure the HTTP client.
-	c.client = &retryablehttp.Client{
-		Backoff:      c.retryHTTPBackoff,
-		CheckRetry:   c.retryHTTPCheck,
-		RetryWaitMin: 100 * time.Millisecond,
-		RetryWaitMax: 400 * time.Millisecond,
-		RetryMax:     5,
-	}
-	// https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/#rate-limits
-	baseLimit := 50.0 / 60
-	limit := rate.Limit(baseLimit)
-	c.limiter = rate.NewLimiter(limit, 50)
+	// retryablehttp.Client will retry up to 4 times on recoverable errors (429, 5xx, and low-level network errors)
+	c.client = retryablehttp.NewClient()
 
 	// Set the default base URL. _ suppress error handling
 	err := c.setBaseURL(url)
 	if err != nil {
 		return nil, err
 	}
+
+	err = c.setGrafanaURL(grafana_url)
+	if err != nil {
+		return nil, err
+	}
+
 	c.UserAgent = defaultUserAgent
 
 	// Create services. Keep in sync with Client struct
 	c.Alerts = NewAlertService(c)
+	c.AlertGroups = NewAlertGroupService(c)
 	c.Integrations = NewIntegrationService(c)
 	c.EscalationChains = NewEscalationChainService(c)
 	c.Escalations = NewEscalationService(c)
@@ -109,10 +108,10 @@ func newClient(url string) (*Client, error) {
 	c.Routes = NewRouteService(c)
 	c.SlackChannels = NewSlackChannelService(c)
 	c.UserGroups = NewUserGroupService(c)
-	c.CustomActions = NewCustomActionService(c)
 	c.OnCallShifts = NewOnCallShiftService(c)
 	c.Teams = NewTeamService(c)
 	c.Webhooks = NewWebhookService(c)
+	c.UserNotificationRules = NewUserNotificationRuleService(c)
 	c.ResolutionNotes = NewResolutionNoteService(c)
 
 	return c, nil
@@ -137,9 +136,24 @@ func (c *Client) setBaseURL(urlStr string) error {
 	return nil
 }
 
+func (c *Client) setGrafanaURL(urlStr string) error {
+	if urlStr != "" {
+		grafanaUrl, err := url.Parse(urlStr)
+		if err != nil {
+			return err
+		}
+		c.grafanaURL = grafanaUrl
+	}
+
+	return nil
+}
+
 func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehttp.Request, error) {
 	u := *c.baseURL
 	unescaped, err := url.PathUnescape(path)
+	if err != nil {
+		return nil, err
+	}
 
 	// Set the encoded path data
 	u.RawPath = c.baseURL.Path + path
@@ -149,6 +163,9 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehtt
 	reqHeaders := make(http.Header)
 	reqHeaders.Set("Accept", "application/json")
 	reqHeaders.Set("Authorization", c.token)
+	if c.grafanaURL != nil {
+		reqHeaders.Set("X-Grafana-URL", c.grafanaURL.String())
+	}
 	if c.UserAgent != "" {
 		reqHeaders.Set("User-Agent", c.UserAgent)
 	}
@@ -173,6 +190,9 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehtt
 	}
 
 	req, err := retryablehttp.NewRequest(method, u.String(), body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Set the request specific headers.
 	for k, v := range reqHeaders {
@@ -186,12 +206,6 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehtt
 // JSON decoded and stored in the value pointed to by v, or returned as an
 // error if an API error has occurred.
 func (c *Client) Do(req *retryablehttp.Request, v interface{}) (*http.Response, error) {
-	err := c.limiter.Wait(req.Context())
-	if err != nil {
-		log.Println("limiter")
-		return nil, err
-	}
-
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -279,44 +293,15 @@ func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("%s %s: %d %s", e.Response.Request.Method, u, e.Response.StatusCode, e.Message)
 }
 
-func (c *Client) retryHTTPCheck(ctx context.Context, resp *http.Response, err error) (bool, error) {
-	if ctx.Err() != nil {
-		return false, ctx.Err()
-	}
-	if err != nil {
-		return false, err
-	}
-	if !c.disableRetries && (resp.StatusCode == 429 || resp.StatusCode >= 500) {
-		return true, nil
-	}
-	return false, nil
-}
-
-func (c *Client) retryHTTPBackoff(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
-	if resp != nil && resp.StatusCode == 429 {
-		return rateLimitBackoff(min, max, attemptNum, resp)
-	}
-
-	return retryablehttp.LinearJitterBackoff(min, max, attemptNum, resp)
-}
-
-func rateLimitBackoff(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
-	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	jitter := time.Duration(rnd.Float64() * float64(max-min))
-	log.Printf("[DEBUG] ratelimited call")
-	if resp != nil {
-		if v := resp.Header.Get("RateLimit-Reset"); v != "" {
-			if reset, _ := strconv.ParseInt(v, 10, 64); reset > 0 {
-				log.Printf("[DEBUG] reset in '%d", reset)
-				min = time.Duration(reset) * time.Second
-			}
-		}
-	}
-
-	return min + jitter
-}
-
 func (c *Client) BaseURL() *url.URL {
 	u := *c.baseURL
+	return &u
+}
+
+func (c *Client) GrafanaURL() *url.URL {
+	if c.grafanaURL == nil {
+		return nil
+	}
+	u := *c.grafanaURL
 	return &u
 }

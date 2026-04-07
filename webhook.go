@@ -28,6 +28,7 @@ type PaginatedWebhooksResponse struct {
 
 type Webhook struct {
 	ID                  string    `json:"id"`
+	Preset              string    `json:"preset"`
 	Name                string    `json:"name"`
 	Team                string    `json:"team"`
 	Url                 string    `json:"url"`
@@ -93,6 +94,7 @@ func (service *WebhookService) GetWebhook(id string, opt *GetWebhookOptions) (*W
 }
 
 type CreateWebhookOptions struct {
+	Preset              string    `json:"preset"`
 	Name                string    `json:"name"`
 	Team                string    `json:"team"`
 	Url                 string    `json:"url"`
@@ -132,6 +134,7 @@ func (service *WebhookService) CreateWebhook(opt *CreateWebhookOptions) (*Webhoo
 }
 
 type UpdateWebhookOptions struct {
+	Preset              string    `json:"preset"`
 	Name                string    `json:"name"`
 	Team                string    `json:"team"`
 	Url                 string    `json:"url"`

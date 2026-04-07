@@ -11,11 +11,12 @@ var key = "key"
 var signal = "signal"
 var source_link = "source_link"
 var testIntegration = &Integration{
-	ID:     "CFRPV98RPR1U8",
-	TeamId: "T3HRAP3K3IKOP",
-	Name:   "Test Grafana",
-	Type:   "grafana",
-	Link:   "https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
+	ID:           "CFRPV98RPR1U8",
+	TeamId:       "T3HRAP3K3IKOP",
+	Name:         "Test Grafana",
+	Type:         "grafana",
+	Link:         "https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
+	InboundEmail: "",
 	DefaultRoute: &DefaultRoute{
 		ID: "RIYGUJXCPFHXY",
 	},
@@ -55,6 +56,30 @@ var testIntegration = &Integration{
 			nil,
 			nil,
 		},
+		&TitleMessageTemplate{ // Mobile app
+			nil,
+			nil,
+		},
+	},
+	Labels: []*Label{
+		&Label{
+			Key: KeyValueName{
+				Name: "Flip",
+			},
+			Value: KeyValueName{
+				Name: "Flop",
+			},
+		},
+	},
+	DynamicLabels: []*Label{
+		&Label{
+			Key: KeyValueName{
+				Name: "",
+			},
+			Value: KeyValueName{
+				Name: "Flop",
+			},
+		},
 	},
 }
 
@@ -64,6 +89,7 @@ var testIntegrationBody = `{
 	"name":"Test Grafana",
 	"type":"grafana",
 	"link":"https://grafana_url/integrations/v1/grafana/mReAoNwDm0eMwKo1mTeTwYo/",
+	"inbound_email": "",
 	"default_route":{
 	   "id":"RIYGUJXCPFHXY"
 	},
@@ -102,8 +128,22 @@ var testIntegrationBody = `{
 		  "title":null,
 		  "message":null,
 		  "image_url":null
+	   },
+	   "mobile_app":{
+		  "title":null,
+		  "message":null
 	   }
-	}
+	},
+	"labels":[
+		{
+			"key": {
+				"name": "Flip"
+			},
+			"value": {
+				"name": "Flop"
+			}
+		}
+	]
  }`
 
 func TestCreateIntegration(t *testing.T) {

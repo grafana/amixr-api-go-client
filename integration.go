@@ -31,10 +31,13 @@ type Integration struct {
 	TeamId         string        `json:"team_id"`
 	Name           string        `json:"name"`
 	Link           string        `json:"link"`
+	InboundEmail   string        `json:"inbound_email"`
 	IncidentsCount int           `json:"incidents_count"`
 	Type           string        `json:"type"`
 	DefaultRoute   *DefaultRoute `json:"default_route"`
 	Templates      *Templates    `json:"templates"`
+	Labels         []*Label      `json:"labels"`
+	DynamicLabels  []*Label      `json:"dynamic_labels"`
 }
 
 type DefaultRoute struct {
@@ -57,6 +60,7 @@ type Templates struct {
 	PhoneCall         *TitleTemplate             `json:"phone_call"`
 	SMS               *TitleTemplate             `json:"sms"`
 	Email             *TitleMessageTemplate      `json:"email"`
+	MobileApp         *TitleMessageTemplate      `json:"mobile_app"`
 }
 
 type TitleMessageImageTemplate struct {
@@ -80,6 +84,15 @@ type MessageTemplate struct {
 
 type ImageURLTemplate struct {
 	ImageURL *string `json:"image_url"`
+}
+
+type Label struct {
+	Key   KeyValueName `json:"key"`
+	Value KeyValueName `json:"value"`
+}
+
+type KeyValueName struct {
+	Name string `json:"name"`
 }
 
 type ListIntegrationOptions struct {
@@ -130,11 +143,13 @@ func (service *IntegrationService) GetIntegration(id string, opt *GetIntegration
 }
 
 type CreateIntegrationOptions struct {
-	TeamId       string        `json:"team_id"`
-	Name         string        `json:"name,omitempty"`
-	Type         string        `json:"type,omitempty"`
-	Templates    *Templates    `json:"templates,omitempty"`
-	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
+	TeamId        string        `json:"team_id"`
+	Name          string        `json:"name,omitempty"`
+	Type          string        `json:"type,omitempty"`
+	Templates     *Templates    `json:"templates,omitempty"`
+	DefaultRoute  *DefaultRoute `json:"default_route,omitempty"`
+	Labels        []*Label      `json:"labels,omitempty"`
+	DynamicLabels []*Label      `json:"dynamic_labels,omitempty"`
 }
 
 // CreateIntegration creates integration with type, team_id and optional given name.
@@ -158,10 +173,12 @@ func (service *IntegrationService) CreateIntegration(opt *CreateIntegrationOptio
 }
 
 type UpdateIntegrationOptions struct {
-	Name         string        `json:"name,omitempty"`
-	TeamId       string        `json:"team_id"`
-	Templates    *Templates    `json:"templates,omitempty"`
-	DefaultRoute *DefaultRoute `json:"default_route,omitempty"`
+	Name          string        `json:"name,omitempty"`
+	TeamId        string        `json:"team_id"`
+	Templates     *Templates    `json:"templates,omitempty"`
+	DefaultRoute  *DefaultRoute `json:"default_route,omitempty"`
+	Labels        []*Label      `json:"labels,omitempty"`
+	DynamicLabels []*Label      `json:"dynamic_labels,omitempty"`
 }
 
 // UpdateIntegration updates integration with new templates, name and default route.

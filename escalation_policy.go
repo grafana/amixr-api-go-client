@@ -35,12 +35,16 @@ type Escalation struct {
 	Duration                 *int      `json:"duration"`
 	PersonsToNotify          *[]string `json:"persons_to_notify"`
 	PersonsToNotifyEachTime  *[]string `json:"persons_to_notify_next_each_time"`
+	TeamToNotify             *string   `json:"team_to_notify"`
 	NotifyOnCallFromSchedule *string   `json:"notify_on_call_from_schedule"`
 	ActionToTrigger          *string   `json:"action_to_trigger"`
 	GroupToNotify            *string   `json:"group_to_notify"`
 	Important                *bool     `json:"important"`
 	NotifyIfTimeFrom         *string   `json:"notify_if_time_from"`
 	NotifyIfTimeTo           *string   `json:"notify_if_time_to"`
+	NumAlertsInWindow        *int      `json:"num_alerts_in_window"`
+	NumMinutesInWindow       *int      `json:"num_minutes_in_window"`
+	Severity                 *string   `json:"severity"`
 }
 
 // Empty struct is here in case we want to add request params to ListEscalations.
@@ -98,6 +102,7 @@ type CreateEscalationOptions struct {
 	Duration                    int       `json:"duration,omitempty"`
 	PersonsToNotify             *[]string `json:"persons_to_notify,omitempty"`
 	PersonsToNotifyNextEachTime *[]string `json:"persons_to_notify_next_each_time,omitempty"`
+	TeamToNotify                string    `json:"team_to_notify,omitempty"`
 	NotifyOnCallFromSchedule    string    `json:"notify_on_call_from_schedule,omitempty"`
 	ActionToTrigger             string    `json:"action_to_trigger,omitempty"`
 	GroupToNotify               string    `json:"group_to_notify,omitempty"`
@@ -105,6 +110,9 @@ type CreateEscalationOptions struct {
 	Important                   *bool     `json:"important,omitempty"`
 	NotifyIfTimeFrom            string    `json:"notify_if_time_from,omitempty"`
 	NotifyIfTimeTo              string    `json:"notify_if_time_to,omitempty"`
+	NumAlertsInWindow           int       `json:"num_alerts_in_window,omitempty"`
+	NumMinutesInWindow          int       `json:"num_minutes_in_window,omitempty"`
+	Severity                    string    `json:"severity,omitempty"`
 }
 
 // CreateEscalation creates an  escalation
@@ -135,6 +143,7 @@ type UpdateEscalationOptions struct {
 	Duration                 int       `json:"duration,omitempty"`
 	PersonsToNotify          *[]string `json:"persons_to_notify,omitempty"`
 	PersonsToNotifyEachTime  *[]string `json:"persons_to_notify_next_each_time,omitempty"`
+	TeamToNotify             string    `json:"team_to_notify,omitempty"`
 	NotifyOnCallFromSchedule string    `json:"notify_on_call_from_schedule,omitempty"`
 	ActionToTrigger          string    `json:"action_to_trigger,omitempty"`
 	GroupToNotify            string    `json:"group_to_notify,omitempty"`
@@ -142,6 +151,9 @@ type UpdateEscalationOptions struct {
 	Important                *bool     `json:"important,omitempty"`
 	NotifyIfTimeFrom         string    `json:"notify_if_time_from,omitempty"`
 	NotifyIfTimeTo           string    `json:"notify_if_time_to,omitempty"`
+	NumAlertsInWindow        int       `json:"num_alerts_in_window,omitempty"`
+	NumMinutesInWindow       int       `json:"num_minutes_in_window,omitempty"`
+	Severity                 string    `json:"severity,omitempty"`
 }
 
 // UpdateEscalation updates an escalation with new templates and/or name. At least one field in template is required
