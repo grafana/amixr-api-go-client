@@ -30,7 +30,7 @@ type PaginatedRoutesResponse struct {
 type Route struct {
 	ID                string         `json:"id"`
 	IntegrationId     string         `json:"integration_id"`
-	EscalationChainId string         `json:"escalation_chain_id"`
+	EscalationChainId *string        `json:"escalation_chain_id"`
 	Position          int            `json:"position"`
 	RoutingRegex      string         `json:"routing_regex"`
 	RoutingType       string         `json:"routing_type"`
@@ -105,7 +105,7 @@ func (service *RouteService) GetRoute(id string, opt *GetRouteOptions) (*Route, 
 
 type CreateRouteOptions struct {
 	IntegrationId     string         `json:"integration_id,omitempty"`
-	EscalationChainId string         `json:"escalation_chain_id,omitempty"`
+	EscalationChainId *string        `json:"escalation_chain_id"`
 	Position          *int           `json:"position,omitempty"`
 	RoutingRegex      string         `json:"routing_regex,omitempty"`
 	RoutingType       string         `json:"routing_type,omitempty"`
@@ -138,7 +138,7 @@ func (service *RouteService) CreateRoute(opt *CreateRouteOptions) (*Route, *http
 }
 
 type UpdateRouteOptions struct {
-	EscalationChainId string         `json:"escalation_chain_id,omitempty"`
+	EscalationChainId *string        `json:"escalation_chain_id"`
 	Position          *int           `json:"position,omitempty"`
 	Slack             *SlackRoute    `json:"slack,omitempty"`
 	Telegram          *TelegramRoute `json:"telegram,omitempty"`
