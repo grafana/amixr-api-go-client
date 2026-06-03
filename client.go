@@ -100,11 +100,15 @@ func New(base_url, token string) (*Client, error) {
 // resolved lazily on first request (see EnsureBaseURL): from the grafana-irm-app
 // plugin settings, then oncallURL, then a built-in default. grafanaAuthToken
 // authenticates the plugin-settings lookup ("user:password" for basic auth,
-// otherwise a bearer token); oncallToken authenticates OnCall API calls.
+// otherwise a bearer token); oncallToken authenticates OnCall API calls, and
+// falls back to grafanaAuthToken when empty.
 func NewWithGrafanaAutodiscovery(grafanaURL, grafanaAuthToken, oncallToken, oncallURL string) (*Client, error) {
 	client, err := newClient(grafanaURL)
 	if err != nil {
 		return nil, err
+	}
+	if oncallToken == "" {
+		oncallToken = grafanaAuthToken
 	}
 	client.token = oncallToken
 	client.grafanaAuthToken = grafanaAuthToken

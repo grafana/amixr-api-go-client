@@ -180,6 +180,44 @@ func TestAutodiscoveryTwoTokens(t *testing.T) {
 	}
 }
 
+func TestAutodiscoveryOnCallTokenFallsBackToGrafanaToken(t *testing.T) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"jsonData": map[string]any{"onCallApiUrl": server.URL},
+		})
+	})
+
+	var apiAuth string
+	mux.HandleFunc("/api/v1/users", func(w http.ResponseWriter, r *http.Request) {
+		apiAuth = r.Header.Get("Authorization")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"count":0,"results":[]}`))
+	})
+
+	// Empty OnCall token -> OnCall API calls use the Grafana auth token.
+	c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "", "")
+	if err != nil {
+		t.Fatalf("constructor error: %v", err)
+	}
+
+	req, err := c.NewRequest("GET", "users", nil)
+	if err != nil {
+		t.Fatalf("NewRequest error: %v", err)
+	}
+	if _, err := c.Do(req, nil); err != nil {
+		t.Fatalf("Do error: %v", err)
+	}
+
+	if apiAuth != "glsa_grafana" {
+		t.Errorf("OnCall API call used Authorization %q, want %q", apiAuth, "glsa_grafana")
+	}
+}
+
 func TestAutodiscoveryBasicAuthForLookup(t *testing.T) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
