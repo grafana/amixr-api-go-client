@@ -123,3 +123,46 @@ func TestGetWebhook(t *testing.T) {
 		t.Errorf("returned\n %+v\n want\n %+v\n", Webhook, want)
 	}
 }
+
+func TestGetWebhookWithScheduleFilter(t *testing.T) {
+	mux, server, client := setup(t)
+	defer teardown(server)
+
+	body := `{
+	"id": "KGEFG74LU1D8L",
+	"name": "Schedule webhook",
+	"team": "T3HRAP3K3IKOP",
+	"http_method": "POST",
+	"trigger_type": "on-call changed",
+	"url": "http://test.com",
+	"preset": "schedule_webhook",
+	"schedule_filter": ["S1HRAP3K3IKOP", "S2HRAP3K3IKOP"]
+}`
+
+	mux.HandleFunc("/api/v1/webhooks/KGEFG74LU1D8L/", func(w http.ResponseWriter, r *http.Request) {
+		testRequestMethod(t, r, "GET")
+		fmt.Fprint(w, body)
+	})
+
+	options := &GetWebhookOptions{}
+	webhook, _, err := client.Webhooks.GetWebhook("KGEFG74LU1D8L", options)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scheduleFilter := []string{"S1HRAP3K3IKOP", "S2HRAP3K3IKOP"}
+	want := &Webhook{
+		ID:             "KGEFG74LU1D8L",
+		Name:           "Schedule webhook",
+		Team:           "T3HRAP3K3IKOP",
+		HttpMethod:     "POST",
+		TriggerType:    "on-call changed",
+		Url:            "http://test.com",
+		Preset:         "schedule_webhook",
+		ScheduleFilter: &scheduleFilter,
+	}
+
+	if !reflect.DeepEqual(want, webhook) {
+		t.Errorf("returned\n %+v\n want\n %+v\n", webhook, want)
+	}
+}

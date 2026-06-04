@@ -42,6 +42,7 @@ type Webhook struct {
 	Headers             *string   `json:"headers"`
 	ForwardAll          bool      `json:"forward_all"`
 	IntegrationFilter   *[]string `json:"integration_filter"`
+	ScheduleFilter      *[]string `json:"schedule_filter"`
 	IsWebhookEnabled    bool      `json:"is_webhook_enabled"`
 }
 
@@ -108,6 +109,7 @@ type CreateWebhookOptions struct {
 	Headers             *string   `json:"headers"`
 	ForwardAll          bool      `json:"forward_all"`
 	IntegrationFilter   *[]string `json:"integration_filter"`
+	ScheduleFilter      *[]string `json:"schedule_filter"`
 	IsWebhookEnabled    bool      `json:"is_webhook_enabled"`
 }
 
@@ -148,6 +150,7 @@ type UpdateWebhookOptions struct {
 	Headers             *string   `json:"headers"`
 	ForwardAll          bool      `json:"forward_all"`
 	IntegrationFilter   *[]string `json:"integration_filter"`
+	ScheduleFilter      *[]string `json:"schedule_filter"`
 	IsWebhookEnabled    bool      `json:"is_webhook_enabled"`
 }
 
