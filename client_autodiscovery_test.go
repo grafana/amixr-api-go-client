@@ -218,34 +218,6 @@ func TestAutodiscoveryOnCallTokenFallsBackToGrafanaToken(t *testing.T) {
 	}
 }
 
-func TestAutodiscoveryBasicAuthForLookup(t *testing.T) {
-	mux := http.NewServeMux()
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	var user, pass string
-	var ok bool
-	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", func(w http.ResponseWriter, r *http.Request) {
-		user, pass, ok = r.BasicAuth()
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"jsonData": map[string]any{"onCallApiUrl": server.URL + "/oncall"},
-		})
-	})
-
-	c, err := NewWithGrafanaAutodiscovery(server.URL, "admin:secret", "oncall_token", "")
-	if err != nil {
-		t.Fatalf("constructor error: %v", err)
-	}
-	if err := c.EnsureBaseURL(context.Background()); err != nil {
-		t.Fatalf("EnsureBaseURL error: %v", err)
-	}
-
-	if !ok || user != "admin" || pass != "secret" {
-		t.Errorf("discovery basic auth = (%q,%q,ok=%v), want (admin,secret,true)", user, pass, ok)
-	}
-}
-
 func TestAutodiscoveryLazyOnNewRequest(t *testing.T) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)

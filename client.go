@@ -98,10 +98,10 @@ func New(base_url, token string) (*Client, error) {
 
 // NewWithGrafanaAutodiscovery creates a client whose OnCall backend URL is
 // resolved lazily on first request (see EnsureBaseURL): from the grafana-irm-app
-// plugin settings, then oncallURL, then a built-in default. grafanaAuthToken
-// authenticates the plugin-settings lookup ("user:password" for basic auth,
-// otherwise a bearer token); oncallToken authenticates OnCall API calls, and
-// falls back to grafanaAuthToken when empty.
+// plugin settings, then oncallURL, then a built-in default. grafanaAuthToken is
+// a Grafana service account token; it authenticates the plugin-settings lookup.
+// oncallToken authenticates OnCall API calls and falls back to grafanaAuthToken
+// when empty.
 func NewWithGrafanaAutodiscovery(grafanaURL, grafanaAuthToken, oncallToken, oncallURL string) (*Client, error) {
 	client, err := newClient(grafanaURL)
 	if err != nil {
@@ -402,10 +402,7 @@ func (c *Client) fetchOnCallURLFromPlugin(ctx context.Context) (string, error) {
 	if c.UserAgent != "" {
 		req.Header.Set("User-Agent", c.UserAgent)
 	}
-	// "user:password" -> basic auth, otherwise a bearer token.
-	if parts := strings.SplitN(c.grafanaAuthToken, ":", 2); len(parts) == 2 {
-		req.SetBasicAuth(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
-	} else if token := strings.TrimSpace(parts[0]); token != "" && token != "anonymous" {
+	if token := strings.TrimSpace(c.grafanaAuthToken); token != "" && token != "anonymous" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
