@@ -177,8 +177,26 @@ type UpdateIntegrationOptions struct {
 	TeamId        string        `json:"team_id"`
 	Templates     *Templates    `json:"templates,omitempty"`
 	DefaultRoute  *DefaultRoute `json:"default_route,omitempty"`
-	Labels        []*Label      `json:"labels,omitempty"`
-	DynamicLabels []*Label      `json:"dynamic_labels,omitempty"`
+	// Labels and DynamicLabels use pointers so callers can distinguish:
+	//   nil            -> omit field (preserve existing labels on the server)
+	//   &[]*Label{}    -> send [] (clear labels on the server)
+	Labels        *[]*Label `json:"labels,omitempty"`
+	DynamicLabels *[]*Label `json:"dynamic_labels,omitempty"`
+}
+
+// EmptyLabelList returns a pointer to an empty label slice for update requests.
+// It marshals as "labels": [] or "dynamic_labels": [] to clear labels on the server.
+func EmptyLabelList() *[]*Label {
+	empty := []*Label{}
+	return &empty
+}
+
+// LabelList returns a pointer to labels for update requests, or nil when labels is nil.
+func LabelList(labels []*Label) *[]*Label {
+	if labels == nil {
+		return nil
+	}
+	return &labels
 }
 
 // UpdateIntegration updates integration with new templates, name and default route.
