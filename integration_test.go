@@ -1,9 +1,12 @@
 package aapi
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -218,6 +221,176 @@ func TestListIntegrations(t *testing.T) {
 
 		t.Errorf(" returned\n %+v, \nwant\n %+v", integrations, want)
 	}
+}
+
+func TestUpdateIntegrationOptions_MarshalLabels(t *testing.T) {
+	label := &Label{
+		Key:   KeyValueName{Name: "severity"},
+		Value: KeyValueName{Name: "critical"},
+	}
+	labelsWithValue := []*Label{label}
+	emptyLabels := []*Label{}
+
+	tests := []struct {
+		name              string
+		opts              UpdateIntegrationOptions
+		wantLabels        string
+		wantDynamicLabels string
+	}{
+		{
+			name:              "nil labels and dynamic labels are omitted",
+			opts:              UpdateIntegrationOptions{Name: "integration", TeamId: "team"},
+			wantLabels:        "absent",
+			wantDynamicLabels: "absent",
+		},
+		{
+			name: "empty labels slice is sent as an empty array",
+			opts: UpdateIntegrationOptions{
+				Name:   "integration",
+				TeamId: "team",
+				Labels: &emptyLabels,
+			},
+			wantLabels:        "empty",
+			wantDynamicLabels: "absent",
+		},
+		{
+			name: "empty dynamic labels slice is sent as an empty array",
+			opts: UpdateIntegrationOptions{
+				Name:          "integration",
+				TeamId:        "team",
+				DynamicLabels: &emptyLabels,
+			},
+			wantLabels:        "absent",
+			wantDynamicLabels: "empty",
+		},
+		{
+			name: "both empty label lists are sent as empty arrays",
+			opts: UpdateIntegrationOptions{
+				Name:          "integration",
+				TeamId:        "team",
+				Labels:        EmptyLabelList(),
+				DynamicLabels: EmptyLabelList(),
+			},
+			wantLabels:        "empty",
+			wantDynamicLabels: "empty",
+		},
+		{
+			name: "populated labels are sent",
+			opts: UpdateIntegrationOptions{
+				Name:   "integration",
+				TeamId: "team",
+				Labels: &labelsWithValue,
+			},
+			wantLabels:        "present",
+			wantDynamicLabels: "absent",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.opts)
+			if err != nil {
+				t.Fatalf("json.Marshal() error = %v", err)
+			}
+
+			if got := jsonFieldState(t, body, "labels"); got != tt.wantLabels {
+				t.Errorf("labels in request body = %q, want %q; body = %s", got, tt.wantLabels, body)
+			}
+			if got := jsonFieldState(t, body, "dynamic_labels"); got != tt.wantDynamicLabels {
+				t.Errorf("dynamic_labels in request body = %q, want %q; body = %s", got, tt.wantDynamicLabels, body)
+			}
+		})
+	}
+}
+
+func TestUpdateIntegration_LabelsRequestBody(t *testing.T) {
+	tests := []struct {
+		name              string
+		opts              *UpdateIntegrationOptions
+		wantLabels        string
+		wantDynamicLabels string
+	}{
+		{
+			name: "nil labels are omitted from update request body",
+			opts: &UpdateIntegrationOptions{
+				Name:   "integration",
+				TeamId: "team",
+			},
+			wantLabels:        "absent",
+			wantDynamicLabels: "absent",
+		},
+		{
+			name: "empty labels slice is sent in update request body",
+			opts: &UpdateIntegrationOptions{
+				Name:   "integration",
+				TeamId: "team",
+				Labels: EmptyLabelList(),
+			},
+			wantLabels:        "empty",
+			wantDynamicLabels: "absent",
+		},
+		{
+			name: "empty dynamic labels slice is sent in update request body",
+			opts: &UpdateIntegrationOptions{
+				Name:          "integration",
+				TeamId:        "team",
+				DynamicLabels: EmptyLabelList(),
+			},
+			wantLabels:        "absent",
+			wantDynamicLabels: "empty",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mux, server, client := setup(t)
+			defer teardown(server)
+
+			mux.HandleFunc("/api/v1/integrations/CFRPV98RPR1U8/", func(w http.ResponseWriter, r *http.Request) {
+				testRequestMethod(t, r, "PUT")
+
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					t.Fatalf("ReadAll() error = %v", err)
+				}
+
+				if got := jsonFieldState(t, body, "labels"); got != tt.wantLabels {
+					t.Errorf("labels in request body = %q, want %q; body = %s", got, tt.wantLabels, body)
+				}
+				if got := jsonFieldState(t, body, "dynamic_labels"); got != tt.wantDynamicLabels {
+					t.Errorf("dynamic_labels in request body = %q, want %q; body = %s", got, tt.wantDynamicLabels, body)
+				}
+
+				fmt.Fprint(w, testIntegrationBody)
+			})
+
+			_, _, err := client.Integrations.UpdateIntegration("CFRPV98RPR1U8", tt.opts)
+			if err != nil {
+				t.Fatalf("UpdateIntegration() error = %v", err)
+			}
+		})
+	}
+}
+
+func jsonFieldState(t *testing.T, body []byte, field string) string {
+	t.Helper()
+
+	var payload map[string]json.RawMessage
+	if err := json.Unmarshal(body, &payload); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v; body = %s", err, body)
+	}
+
+	raw, ok := payload[field]
+	if !ok {
+		return "absent"
+	}
+
+	trimmed := strings.TrimSpace(string(raw))
+	if trimmed == "[]" {
+		return "empty"
+	}
+
+	return "present"
 }
 
 func TestGetIntegration(t *testing.T) {
