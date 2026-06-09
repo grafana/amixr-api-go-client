@@ -1,6 +1,7 @@
 package aapi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,14 +10,18 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/google/go-querystring/query"
 	"github.com/hashicorp/go-retryablehttp"
 )
 
 const (
-	apiVersionPath   = "api/v1/"
-	defaultUserAgent = "amixr-api-go-client"
+	apiVersionPath            = "api/v1/"
+	defaultUserAgent          = "amixr-api-go-client"
+	grafanaIRMAppSettingsPath = "api/plugins/grafana-irm-app/settings"
+	defaultOnCallURL          = "https://oncall-prod-us-central-0.grafana.net/oncall"
 )
 
 type ListOptions struct {
@@ -36,6 +41,14 @@ type Client struct {
 	baseURL    *url.URL
 	grafanaURL *url.URL
 	UserAgent  string
+
+	// Set only by NewWithGrafanaAutodiscovery; used for lazy base-URL resolution.
+	grafanaAuthToken  string
+	configuredBaseURL string
+	baseURLOnce       sync.Once
+	warnMu            sync.Mutex
+	warnings          []string
+
 	// List of Services. Keep in sync with func newClient
 	Alerts                *AlertService
 	AlertGroups           *AlertGroupService
@@ -57,8 +70,11 @@ func NewWithGrafanaURL(base_url, token, grafana_url string) (*Client, error) {
 	if base_url == "" {
 		return nil, fmt.Errorf("BaseUrl required")
 	}
-	client, err := newClient(base_url, grafana_url)
+	client, err := newClient(grafana_url)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.setBaseURL(base_url); err != nil {
 		return nil, err
 	}
 	client.token = token
@@ -69,27 +85,44 @@ func New(base_url, token string) (*Client, error) {
 	if base_url == "" {
 		return nil, fmt.Errorf("BaseUrl required")
 	}
-	client, err := newClient(base_url, "")
+	client, err := newClient("")
 	if err != nil {
+		return nil, err
+	}
+	if err := client.setBaseURL(base_url); err != nil {
 		return nil, err
 	}
 	client.token = token
 	return client, nil
 }
 
-func newClient(url, grafana_url string) (*Client, error) {
+// NewWithGrafanaAutodiscovery creates a client whose OnCall backend URL is
+// resolved lazily on first request (see EnsureBaseURL): from the grafana-irm-app
+// plugin settings, then oncallURL, then a built-in default. grafanaAuthToken is
+// a Grafana service account token; it authenticates the plugin-settings lookup.
+// oncallToken authenticates OnCall API calls and falls back to grafanaAuthToken
+// when empty.
+func NewWithGrafanaAutodiscovery(grafanaURL, grafanaAuthToken, oncallToken, oncallURL string) (*Client, error) {
+	client, err := newClient(grafanaURL)
+	if err != nil {
+		return nil, err
+	}
+	if oncallToken == "" {
+		oncallToken = grafanaAuthToken
+	}
+	client.token = oncallToken
+	client.grafanaAuthToken = grafanaAuthToken
+	client.configuredBaseURL = oncallURL
+	return client, nil
+}
+
+func newClient(grafana_url string) (*Client, error) {
 	c := &Client{}
 
 	// retryablehttp.Client will retry up to 4 times on recoverable errors (429, 5xx, and low-level network errors)
 	c.client = retryablehttp.NewClient()
 
-	// Set the default base URL. _ suppress error handling
-	err := c.setBaseURL(url)
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.setGrafanaURL(grafana_url)
+	err := c.setGrafanaURL(grafana_url)
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +180,13 @@ func (c *Client) setGrafanaURL(urlStr string) error {
 }
 
 func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehttp.Request, error) {
+	// Resolve lazily if a caller never called EnsureBaseURL; a no-op once set.
+	if c.baseURL == nil {
+		if err := c.EnsureBaseURL(context.Background()); err != nil {
+			return nil, err
+		}
+	}
+
 	u := *c.baseURL
 	unescaped, err := url.PathUnescape(path)
 	if err != nil {
@@ -302,4 +342,118 @@ func (c *Client) GrafanaURL() *url.URL {
 	}
 	u := *c.grafanaURL
 	return &u
+}
+
+// EnsureBaseURL resolves the OnCall backend URL if it has not been resolved yet.
+// It is safe to call multiple times and concurrently; resolution runs at most
+// once and is a no-op for clients constructed with a concrete base URL. The
+// error return is reserved for future use and is always nil today.
+func (c *Client) EnsureBaseURL(ctx context.Context) error {
+	if c.baseURL != nil {
+		return nil
+	}
+	c.baseURLOnce.Do(func() {
+		c.resolveBaseURL(ctx)
+	})
+	return nil
+}
+
+func (c *Client) resolveBaseURL(ctx context.Context) {
+	if c.grafanaURL != nil && c.grafanaAuthToken != "" {
+		if pluginURL, err := c.fetchOnCallURLFromPlugin(ctx); err != nil {
+			c.addWarning(fmt.Sprintf(
+				"Could not determine the OnCall backend URL from the grafana-irm-app plugin settings: %s. "+
+					"Ensure the Grafana IRM/OnCall app is installed for this stack and that the token has the plugins.app:access permission, "+
+					"or set the oncall_url provider attribute explicitly. Falling back to oncall_url or the default OnCall URL.",
+				err,
+			))
+		} else if pluginURL != "" {
+			if err := c.setBaseURL(pluginURL); err == nil {
+				return
+			}
+		}
+	}
+
+	if c.configuredBaseURL != "" {
+		if err := c.setBaseURL(c.configuredBaseURL); err == nil {
+			return
+		}
+	}
+
+	_ = c.setBaseURL(defaultOnCallURL)
+}
+
+// fetchOnCallURLFromPlugin reads jsonData.onCallApiUrl from the grafana-irm-app
+// plugin settings at GET {grafanaURL}/api/plugins/grafana-irm-app/settings.
+func (c *Client) fetchOnCallURLFromPlugin(ctx context.Context) (string, error) {
+	settingsURL, err := url.JoinPath(c.grafanaURL.String(), grafanaIRMAppSettingsPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to build plugin settings URL: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, settingsURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to build plugin settings request: %w", err)
+	}
+	req.Header.Set("Accept", "application/json")
+	if c.UserAgent != "" {
+		req.Header.Set("User-Agent", c.UserAgent)
+	}
+	if token := strings.TrimSpace(c.grafanaAuthToken); token != "" && token != "anonymous" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	resp, err := pluginSettingsHTTPClient().Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to request plugin settings: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("plugin settings request returned status %d", resp.StatusCode)
+	}
+
+	var settings struct {
+		JSONData struct {
+			OnCallAPIURL string `json:"onCallApiUrl"`
+		} `json:"jsonData"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&settings); err != nil {
+		return "", fmt.Errorf("failed to decode plugin settings response: %w", err)
+	}
+	if settings.JSONData.OnCallAPIURL == "" {
+		return "", fmt.Errorf("grafana-irm-app plugin settings did not contain an onCallApiUrl")
+	}
+	return settings.JSONData.OnCallAPIURL, nil
+}
+
+// pluginSettingsHTTPClient returns a low-retry HTTP client for the best-effort
+// plugin-settings lookup so a missing plugin or unreachable Grafana fails fast.
+func pluginSettingsHTTPClient() *http.Client {
+	rc := retryablehttp.NewClient()
+	rc.RetryMax = 2
+	rc.Logger = nil
+	return rc.StandardClient()
+}
+
+func (c *Client) addWarning(msg string) {
+	c.warnMu.Lock()
+	defer c.warnMu.Unlock()
+	c.warnings = append(c.warnings, msg)
+}
+
+// Warnings returns and clears any warnings accumulated during OnCall URL
+// resolution (e.g. a failed plugin lookup that fell back to a default).
+func (c *Client) Warnings() []string {
+	c.warnMu.Lock()
+	defer c.warnMu.Unlock()
+	if len(c.warnings) == 0 {
+		return nil
+	}
+	out := c.warnings
+	c.warnings = nil
+	return out
 }
