@@ -1,1 +1,3 @@
-* @grafana/grafana-irm-backend
+# Enable IRM — OnCall public API Go client.
+# https://github.com/grafana/irm/issues/11247
+* @grafana/enable-irm
