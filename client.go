@@ -22,6 +22,10 @@ const (
 	defaultUserAgent          = "amixr-api-go-client"
 	grafanaIRMAppSettingsPath = "api/plugins/grafana-irm-app/settings"
 	defaultOnCallURL          = "https://oncall-prod-us-central-0.grafana.net/oncall"
+
+	// pluginLookupHint tells users how to make the plugin-settings lookup succeed.
+	pluginLookupHint = "ensure the Grafana IRM app is installed and enabled for this stack " +
+		"and that the Grafana auth token has the plugins.app:access permission"
 )
 
 type ListOptions struct {
@@ -38,14 +42,16 @@ type Client struct {
 	// HTTP client used to communicate with the API.
 	client     *retryablehttp.Client
 	token      string
-	baseURL    *url.URL
 	grafanaURL *url.URL
 	UserAgent  string
+
+	// baseURL returns the OnCall API base URL. It is a constant for clients built
+	// with a concrete URL, and a sync.OnceValues lookup for autodiscovery clients.
+	baseURL func() (*url.URL, error)
 
 	// Set only by NewWithGrafanaAutodiscovery; used for lazy base-URL resolution.
 	grafanaAuthToken  string
 	configuredBaseURL string
-	baseURLOnce       sync.Once
 	warnMu            sync.Mutex
 	warnings          []string
 
@@ -98,8 +104,11 @@ func New(base_url, token string) (*Client, error) {
 
 // NewWithGrafanaAutodiscovery creates a client whose OnCall backend URL is
 // resolved lazily on first request (see EnsureBaseURL): from the grafana-irm-app
-// plugin settings, then oncallURL, then a built-in default. grafanaAuthToken is
-// a Grafana service account token; it authenticates the plugin-settings lookup.
+// plugin settings, then oncallURL. A built-in default is used only when the
+// plugin lookup is not possible (no grafanaURL or grafanaAuthToken). If the
+// lookup fails and oncallURL is empty, EnsureBaseURL and NewRequest return an
+// error rather than guessing the OnCall region. grafanaAuthToken is a Grafana
+// service account token; it authenticates the plugin-settings lookup.
 // oncallToken authenticates OnCall API calls and falls back to grafanaAuthToken
 // when empty.
 func NewWithGrafanaAutodiscovery(grafanaURL, grafanaAuthToken, oncallToken, oncallURL string) (*Client, error) {
@@ -113,6 +122,7 @@ func NewWithGrafanaAutodiscovery(grafanaURL, grafanaAuthToken, oncallToken, onca
 	client.token = oncallToken
 	client.grafanaAuthToken = grafanaAuthToken
 	client.configuredBaseURL = oncallURL
+	client.baseURL = sync.OnceValues(client.resolveBaseURL)
 	return client, nil
 }
 
@@ -149,22 +159,30 @@ func newClient(grafana_url string) (*Client, error) {
 }
 
 func (c *Client) setBaseURL(urlStr string) error {
+	baseURL, err := parseBaseURL(urlStr)
+	if err != nil {
+		return err
+	}
+	c.baseURL = func() (*url.URL, error) { return baseURL, nil }
 
+	return nil
+}
+
+func parseBaseURL(urlStr string) (*url.URL, error) {
 	if !strings.HasSuffix(urlStr, "/") {
 		urlStr += "/"
 	}
 
 	baseURL, err := url.Parse(urlStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !strings.HasSuffix(baseURL.Path, apiVersionPath) {
 		baseURL.Path += apiVersionPath
 	}
-	c.baseURL = baseURL
 
-	return nil
+	return baseURL, nil
 }
 
 func (c *Client) setGrafanaURL(urlStr string) error {
@@ -180,22 +198,21 @@ func (c *Client) setGrafanaURL(urlStr string) error {
 }
 
 func (c *Client) NewRequest(method, path string, opt interface{}) (*retryablehttp.Request, error) {
-	// Resolve lazily if a caller never called EnsureBaseURL; a no-op once set.
-	if c.baseURL == nil {
-		if err := c.EnsureBaseURL(context.Background()); err != nil {
-			return nil, err
-		}
+	// Resolves lazily if a caller never called EnsureBaseURL; cached after the first call.
+	baseURL, err := c.baseURL()
+	if err != nil {
+		return nil, err
 	}
 
-	u := *c.baseURL
+	u := *baseURL
 	unescaped, err := url.PathUnescape(path)
 	if err != nil {
 		return nil, err
 	}
 
 	// Set the encoded path data
-	u.RawPath = c.baseURL.Path + path
-	u.Path = c.baseURL.Path + unescaped
+	u.RawPath = baseURL.Path + path
+	u.Path = baseURL.Path + unescaped
 
 	// Create a request specific headers map.
 	reqHeaders := make(http.Header)
@@ -331,8 +348,14 @@ func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("%s %s: %d %s", e.Response.Request.Method, u, e.Response.StatusCode, e.Message)
 }
 
+// BaseURL returns a copy of the OnCall API base URL, resolving it first for
+// autodiscovery clients. It returns nil if resolution failed (see EnsureBaseURL).
 func (c *Client) BaseURL() *url.URL {
-	u := *c.baseURL
+	baseURL, err := c.baseURL()
+	if err != nil {
+		return nil
+	}
+	u := *baseURL
 	return &u
 }
 
@@ -346,41 +369,71 @@ func (c *Client) GrafanaURL() *url.URL {
 
 // EnsureBaseURL resolves the OnCall backend URL if it has not been resolved yet.
 // It is safe to call multiple times and concurrently; resolution runs at most
-// once and is a no-op for clients constructed with a concrete base URL. The
-// error return is reserved for future use and is always nil today.
+// once and is a no-op for clients constructed with a concrete base URL. It
+// returns an error when the plugin lookup was possible but failed and no
+// oncallURL is configured, or when oncallURL is invalid. The result, including
+// an error, is cached for the life of the client. The first call blocks while
+// the lookup runs (up to 15s) and concurrent callers wait for the same lookup.
+// ctx is currently unused: the lookup runs with its own timeout so that its
+// result does not depend on the first caller's context.
 func (c *Client) EnsureBaseURL(ctx context.Context) error {
-	if c.baseURL != nil {
-		return nil
-	}
-	c.baseURLOnce.Do(func() {
-		c.resolveBaseURL(ctx)
-	})
-	return nil
+	_, err := c.baseURL()
+	return err
 }
 
-func (c *Client) resolveBaseURL(ctx context.Context) {
-	if c.grafanaURL != nil && c.grafanaAuthToken != "" {
-		if pluginURL, err := c.fetchOnCallURLFromPlugin(ctx); err != nil {
-			c.addWarning(fmt.Sprintf(
-				"Could not determine the OnCall backend URL from the grafana-irm-app plugin settings: %s. "+
-					"Ensure the Grafana IRM/OnCall app is installed for this stack and that the token has the plugins.app:access permission, "+
-					"or set the oncall_url provider attribute explicitly. Falling back to oncall_url or the default OnCall URL.",
-				err,
-			))
-		} else if pluginURL != "" {
-			if err := c.setBaseURL(pluginURL); err == nil {
-				return
-			}
+// resolveBaseURL determines the OnCall base URL from the grafana-irm-app plugin
+// settings, then oncallURL. The default OnCall URL is used only when the lookup
+// is not possible (no Grafana URL or auth token), never after a failed lookup.
+func (c *Client) resolveBaseURL() (*url.URL, error) {
+	if c.grafanaURL == nil || c.grafanaAuthToken == "" {
+		if c.configuredBaseURL != "" {
+			return c.parseConfiguredBaseURL()
 		}
+		return parseBaseURL(defaultOnCallURL)
 	}
 
-	if c.configuredBaseURL != "" {
-		if err := c.setBaseURL(c.configuredBaseURL); err == nil {
-			return
-		}
+	baseURL, err := c.discoverBaseURL()
+	if err == nil {
+		return baseURL, nil
 	}
+	if c.configuredBaseURL == "" {
+		return nil, fmt.Errorf("could not determine the OnCall backend URL (%s, or set oncall_url): %w", pluginLookupHint, err)
+	}
+	configuredURL, configuredErr := c.parseConfiguredBaseURL()
+	if configuredErr != nil {
+		return nil, configuredErr
+	}
+	c.addWarning(fmt.Sprintf(
+		"Could not determine the OnCall backend URL from the grafana-irm-app plugin settings: %s. "+
+			"Falling back to oncall_url. To stop relying on oncall_url, %s.",
+		err, pluginLookupHint,
+	))
+	return configuredURL, nil
+}
 
-	_ = c.setBaseURL(defaultOnCallURL)
+// discoverBaseURL reads the OnCall base URL from the grafana-irm-app plugin
+// settings and checks that it is an absolute http(s) URL.
+func (c *Client) discoverBaseURL() (*url.URL, error) {
+	pluginURL, err := c.fetchOnCallURLFromPlugin(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	baseURL, err := parseBaseURL(pluginURL)
+	if err == nil && ((baseURL.Scheme != "http" && baseURL.Scheme != "https") || baseURL.Host == "") {
+		err = fmt.Errorf("not an absolute http(s) URL")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("invalid onCallApiUrl %q in grafana-irm-app plugin settings: %w", pluginURL, err)
+	}
+	return baseURL, nil
+}
+
+func (c *Client) parseConfiguredBaseURL() (*url.URL, error) {
+	baseURL, err := parseBaseURL(c.configuredBaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid oncall_url %q: %w", c.configuredBaseURL, err)
+	}
+	return baseURL, nil
 }
 
 // fetchOnCallURLFromPlugin reads jsonData.onCallApiUrl from the grafana-irm-app
@@ -446,7 +499,7 @@ func (c *Client) addWarning(msg string) {
 }
 
 // Warnings returns and clears any warnings accumulated during OnCall URL
-// resolution (e.g. a failed plugin lookup that fell back to a default).
+// resolution (e.g. a failed plugin lookup that fell back to oncallURL).
 func (c *Client) Warnings() []string {
 	c.warnMu.Lock()
 	defer c.warnMu.Unlock()
