@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 // settingsHandler writes a grafana-irm-app plugin settings response whose
@@ -32,7 +36,11 @@ func TestAutodiscoverySuccess(t *testing.T) {
 	var gotHeaders http.Header
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", settingsHandler(server.URL+"/oncall", &gotHeaders))
+	var lookups atomic.Int32
+	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", func(w http.ResponseWriter, r *http.Request) {
+		lookups.Add(1)
+		settingsHandler(server.URL+"/oncall", &gotHeaders)(w, r)
+	})
 
 	c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", "")
 	if err != nil {
@@ -40,8 +48,8 @@ func TestAutodiscoverySuccess(t *testing.T) {
 	}
 
 	// No network at construction.
-	if c.baseURL != nil {
-		t.Fatal("baseURL should be unresolved before EnsureBaseURL")
+	if got := lookups.Load(); got != 0 {
+		t.Fatalf("plugin settings lookups before EnsureBaseURL = %d, want 0", got)
 	}
 
 	if err := c.EnsureBaseURL(context.Background()); err != nil {
@@ -92,28 +100,99 @@ func TestAutodiscoveryFallbackToExplicitURLOnLookupFailure(t *testing.T) {
 	}
 }
 
-func TestAutodiscoveryFallbackToDefaultOnLookupFailure(t *testing.T) {
+func TestAutodiscoveryErrorsOnLookupFailureWithoutExplicitURL(t *testing.T) {
+	tests := map[string]http.HandlerFunc{
+		"plugin not found": func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "not found", http.StatusNotFound)
+		},
+		"no onCallApiUrl": settingsHandler("", nil),
+	}
+
+	for name, handler := range tests {
+		t.Run(name, func(t *testing.T) {
+			mux := http.NewServeMux()
+			server := httptest.NewServer(mux)
+			defer server.Close()
+			var lookups atomic.Int32
+			mux.HandleFunc("/api/plugins/grafana-irm-app/settings", func(w http.ResponseWriter, r *http.Request) {
+				lookups.Add(1)
+				handler(w, r)
+			})
+
+			c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", "")
+			if err != nil {
+				t.Fatalf("constructor error: %v", err)
+			}
+
+			err = c.EnsureBaseURL(context.Background())
+			if err == nil {
+				t.Fatal("expected EnsureBaseURL error, got nil")
+			}
+			for _, want := range []string{"plugins.app:access", "oncall_url"} {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("error %q should mention %q", err, want)
+				}
+			}
+
+			// The default OnCall URL is never used.
+			if u := c.BaseURL(); u != nil {
+				t.Errorf("BaseURL = %s, want nil", u)
+			}
+			if _, err := c.NewRequest("GET", "users", nil); err == nil {
+				t.Error("expected NewRequest error, got nil")
+			}
+
+			// The failure is cached: no second lookup.
+			if err := c.EnsureBaseURL(context.Background()); err == nil {
+				t.Error("expected cached EnsureBaseURL error, got nil")
+			}
+			if got := lookups.Load(); got != 1 {
+				t.Errorf("plugin settings lookups = %d, want 1", got)
+			}
+			if w := c.Warnings(); len(w) != 0 {
+				t.Errorf("expected no warnings, got %v", w)
+			}
+		})
+	}
+}
+
+func TestAutodiscoveryLegacyDefaultURL(t *testing.T) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 	defer server.Close()
+	var lookups atomic.Int32
 	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "not found", http.StatusNotFound)
+		lookups.Add(1)
 	})
 
-	c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", "")
-	if err != nil {
-		t.Fatalf("constructor error: %v", err)
+	// Without a Grafana URL or auth token no lookup is possible, so the default is used.
+	tests := map[string]struct{ grafanaURL, grafanaAuthToken string }{
+		"no grafana URL":        {"", "glsa_grafana"},
+		"no grafana auth token": {server.URL, ""},
 	}
 
-	if err := c.EnsureBaseURL(context.Background()); err != nil {
-		t.Fatalf("EnsureBaseURL error: %v", err)
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			c, err := NewWithGrafanaAutodiscovery(tt.grafanaURL, tt.grafanaAuthToken, "oncall_token", "")
+			if err != nil {
+				t.Fatalf("constructor error: %v", err)
+			}
+
+			if err := c.EnsureBaseURL(context.Background()); err != nil {
+				t.Fatalf("EnsureBaseURL error: %v", err)
+			}
+
+			if got, want := c.BaseURL().String(), expectedBaseURL(defaultOnCallURL); got != want {
+				t.Errorf("BaseURL = %s, want %s", got, want)
+			}
+			if w := c.Warnings(); len(w) != 0 {
+				t.Errorf("expected no warnings, got %v", w)
+			}
+		})
 	}
 
-	if got, want := c.BaseURL().String(), expectedBaseURL(defaultOnCallURL); got != want {
-		t.Errorf("BaseURL = %s, want %s", got, want)
-	}
-	if w := c.Warnings(); len(w) != 1 {
-		t.Errorf("expected 1 warning, got %v", w)
+	if got := lookups.Load(); got != 0 {
+		t.Errorf("plugin settings lookups = %d, want 0", got)
 	}
 }
 
@@ -237,4 +316,181 @@ func TestAutodiscoveryLazyOnNewRequest(t *testing.T) {
 		t.Errorf("BaseURL = %s, want %s", got, want)
 	}
 	_ = fmt.Sprint(c.GrafanaURL())
+}
+
+func TestAutodiscoveryConcurrentResolution(t *testing.T) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	var lookups atomic.Int32
+	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", func(w http.ResponseWriter, r *http.Request) {
+		lookups.Add(1)
+		// Keep the lookup in flight so other goroutines read the base URL meanwhile.
+		time.Sleep(50 * time.Millisecond)
+		settingsHandler(server.URL+"/oncall", nil)(w, r)
+	})
+
+	c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", "")
+	if err != nil {
+		t.Fatalf("constructor error: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	errs := make(chan error, 50)
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			if i%2 == 0 {
+				errs <- c.EnsureBaseURL(context.Background())
+				return
+			}
+			_, err := c.NewRequest("GET", "users", nil)
+			errs <- err
+		}(i)
+	}
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if err != nil {
+			t.Errorf("concurrent call error: %v", err)
+		}
+	}
+	if got := lookups.Load(); got != 1 {
+		t.Errorf("plugin settings lookups = %d, want 1", got)
+	}
+	if got, want := c.BaseURL().String(), expectedBaseURL(server.URL+"/oncall"); got != want {
+		t.Errorf("BaseURL = %s, want %s", got, want)
+	}
+}
+
+func TestAutodiscoveryInvalidPluginURL(t *testing.T) {
+	for _, pluginURL := range []string{"oncall.example.com", "/oncall", "http://a b"} {
+		t.Run(pluginURL, func(t *testing.T) {
+			mux := http.NewServeMux()
+			server := httptest.NewServer(mux)
+			defer server.Close()
+			mux.HandleFunc("/api/plugins/grafana-irm-app/settings", settingsHandler(pluginURL, nil))
+
+			t.Run("without oncallURL", func(t *testing.T) {
+				c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", "")
+				if err != nil {
+					t.Fatalf("constructor error: %v", err)
+				}
+
+				err = c.EnsureBaseURL(context.Background())
+				if err == nil || !strings.Contains(err.Error(), "invalid onCallApiUrl") {
+					t.Errorf("EnsureBaseURL error = %v, want an invalid onCallApiUrl error", err)
+				}
+			})
+
+			t.Run("with oncallURL", func(t *testing.T) {
+				explicit := "https://oncall.example.com/oncall"
+				c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", explicit)
+				if err != nil {
+					t.Fatalf("constructor error: %v", err)
+				}
+
+				if err := c.EnsureBaseURL(context.Background()); err != nil {
+					t.Fatalf("EnsureBaseURL error: %v", err)
+				}
+				if got, want := c.BaseURL().String(), expectedBaseURL(explicit); got != want {
+					t.Errorf("BaseURL = %s, want %s", got, want)
+				}
+				if w := c.Warnings(); len(w) != 1 {
+					t.Errorf("expected 1 warning, got %v", w)
+				}
+			})
+		})
+	}
+}
+
+func TestAutodiscoveryInvalidExplicitURL(t *testing.T) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "not found", http.StatusNotFound)
+	})
+
+	tests := map[string]struct{ grafanaURL, grafanaAuthToken string }{
+		"lookup not possible": {"", ""},
+		"lookup failed":       {server.URL, "glsa_grafana"},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			c, err := NewWithGrafanaAutodiscovery(tt.grafanaURL, tt.grafanaAuthToken, "oncall_token", "http://a b")
+			if err != nil {
+				t.Fatalf("constructor error: %v", err)
+			}
+
+			err = c.EnsureBaseURL(context.Background())
+			if err == nil || !strings.Contains(err.Error(), "invalid oncall_url") {
+				t.Errorf("EnsureBaseURL error = %v, want an invalid oncall_url error", err)
+			}
+			// No "Falling back to oncall_url" warning when the fallback itself is invalid.
+			if w := c.Warnings(); len(w) != 0 {
+				t.Errorf("expected no warnings, got %v", w)
+			}
+		})
+	}
+}
+
+func TestAutodiscoveryConcurrentFailure(t *testing.T) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	var lookups atomic.Int32
+	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", func(w http.ResponseWriter, r *http.Request) {
+		lookups.Add(1)
+		time.Sleep(50 * time.Millisecond)
+		http.Error(w, "not found", http.StatusNotFound)
+	})
+
+	c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", "")
+	if err != nil {
+		t.Fatalf("constructor error: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := c.EnsureBaseURL(context.Background()); err == nil {
+				t.Error("expected EnsureBaseURL error, got nil")
+			}
+		}()
+	}
+	wg.Wait()
+
+	if got := lookups.Load(); got != 1 {
+		t.Errorf("plugin settings lookups = %d, want 1", got)
+	}
+}
+
+func TestAutodiscoveryIgnoresCallerContext(t *testing.T) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", settingsHandler(server.URL+"/oncall", nil))
+
+	c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", "")
+	if err != nil {
+		t.Fatalf("constructor error: %v", err)
+	}
+
+	// The cached result must not depend on the first caller's context.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := c.EnsureBaseURL(ctx); err != nil {
+		t.Fatalf("EnsureBaseURL error: %v", err)
+	}
+	if got, want := c.BaseURL().String(), expectedBaseURL(server.URL+"/oncall"); got != want {
+		t.Errorf("BaseURL = %s, want %s", got, want)
+	}
 }
