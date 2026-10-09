@@ -25,10 +25,11 @@ type PaginatedTeamsResponse struct {
 }
 
 type Team struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Email     string `json:"email"`
-	AvatarUrl string `json:"avatar_url"`
+	ID                      string `json:"id"`
+	Name                    string `json:"name"`
+	Email                   string `json:"email"`
+	AvatarUrl               string `json:"avatar_url"`
+	IsSharingResourcesToAll bool   `json:"is_sharing_resources_to_all"`
 }
 
 type ListTeamOptions struct {
@@ -62,6 +63,33 @@ func (service *TeamService) GetTeam(id string, opt *GetTeamOptions) (*Team, *htt
 	u := fmt.Sprintf("%s/%s/", service.url, id)
 
 	req, err := service.client.NewRequest("GET", u, opt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	team := new(Team)
+	resp, err := service.client.Do(req, team)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return team, resp, err
+}
+
+type UpdateTeamOptions struct {
+	// IsSharingResourcesToAll controls the Team Access Management setting. It is
+	// intentionally not omitempty so that false is sent to the API.
+	IsSharingResourcesToAll bool `json:"is_sharing_resources_to_all"`
+}
+
+// UpdateTeam updates the Team Access Management setting of a team.
+// All other team fields are read-only.
+//
+// https://grafana.com/docs/grafana-cloud/alerting-and-irm/oncall/oncall-api-reference/teams/
+func (service *TeamService) UpdateTeam(id string, opt *UpdateTeamOptions) (*Team, *http.Response, error) {
+	u := fmt.Sprintf("%s/%s/", service.url, id)
+
+	req, err := service.client.NewRequest("PUT", u, opt)
 	if err != nil {
 		return nil, nil, err
 	}
