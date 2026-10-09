@@ -266,8 +266,8 @@ func TestGetAlertGroupWithSpecialCharacters(t *testing.T) {
 	mux.HandleFunc("/api/v1/alert_groups/I68T24C13IFW1%2F..%2Fadmin/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
 		// Verify the path is properly escaped
-		if r.URL.Path != expectedPath {
-			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.Path)
+		if r.URL.EscapedPath() != expectedPath {
+			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.EscapedPath())
 		}
 		fmt.Fprint(w, testAlertGroupBody)
 	})
@@ -283,5 +283,68 @@ func TestGetAlertGroupWithSpecialCharacters(t *testing.T) {
 
 	if !reflect.DeepEqual(testAlertGroup, alertGroup) {
 		t.Errorf("GetAlertGroup returned\n %+v, \nwant\n %+v", alertGroup, testAlertGroup)
+	}
+}
+
+func TestAlertGroupStateActions(t *testing.T) {
+	tests := []struct {
+		name         string
+		call         func(*AlertGroupService, string) (*http.Response, error)
+		expectedPath string
+	}{
+		{
+			name:         "acknowledge",
+			call:         (*AlertGroupService).AcknowledgeAlertGroup,
+			expectedPath: "/api/v1/alert_groups/I68T24C13IFW1/acknowledge",
+		},
+		{
+			name:         "unacknowledge",
+			call:         (*AlertGroupService).UnacknowledgeAlertGroup,
+			expectedPath: "/api/v1/alert_groups/I68T24C13IFW1/unacknowledge",
+		},
+		{
+			name:         "resolve",
+			call:         (*AlertGroupService).ResolveAlertGroup,
+			expectedPath: "/api/v1/alert_groups/I68T24C13IFW1/resolve",
+		},
+		{
+			name:         "unresolve",
+			call:         (*AlertGroupService).UnresolveAlertGroup,
+			expectedPath: "/api/v1/alert_groups/I68T24C13IFW1/unresolve",
+		},
+		{
+			name:         "escaped id",
+			call:         (*AlertGroupService).AcknowledgeAlertGroup,
+			expectedPath: "/api/v1/alert_groups/I68T24C13IFW1%2F..%2Fadmin/acknowledge",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mux, server, client := setup(t)
+			defer teardown(server)
+
+			alertGroupID := "I68T24C13IFW1"
+			if tt.name == "escaped id" {
+				alertGroupID = "I68T24C13IFW1/../admin"
+			}
+
+			mux.HandleFunc(tt.expectedPath, func(w http.ResponseWriter, r *http.Request) {
+				testRequestMethod(t, r, "POST")
+				if r.URL.EscapedPath() != tt.expectedPath {
+					t.Errorf("Expected path %s, got %s", tt.expectedPath, r.URL.EscapedPath())
+				}
+				w.WriteHeader(http.StatusOK)
+			})
+
+			resp, err := tt.call(client.AlertGroups, alertGroupID)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+			}
+		})
 	}
 }
