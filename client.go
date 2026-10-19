@@ -350,6 +350,14 @@ func (e *ErrorResponse) Error() string {
 
 // BaseURL returns a copy of the OnCall API base URL, resolving it first for
 // autodiscovery clients. It returns nil if resolution failed (see EnsureBaseURL).
+// SetHTTPClient sets the HTTP client used for OnCall API requests, for example
+// to supply a custom transport, TLS configuration, or redirect policy. Retries
+// are still applied around it. It does not affect the plugin settings lookup
+// performed by NewWithGrafanaAutodiscovery.
+func (c *Client) SetHTTPClient(httpClient *http.Client) {
+	c.client.HTTPClient = httpClient
+}
+
 func (c *Client) BaseURL() *url.URL {
 	baseURL, err := c.baseURL()
 	if err != nil {
