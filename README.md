@@ -5,7 +5,7 @@
 
 Go client for the [Grafana OnCall public API](https://grafana.com/docs/grafana-cloud/observe-and-act/respond-to-incidents/reference/oncall-api/).
 
-It is primarily maintained for the [Grafana Terraform provider](https://github.com/grafana/terraform-provider-grafana). The module is still `v0.x`, so the API may change between minor versions.
+The module is still `v0.x`, so the API may change between minor versions.
 
 ## Install
 
@@ -17,9 +17,7 @@ The package name is `aapi`.
 
 ## Usage
 
-### Grafana Cloud (recommended)
-
-Pass your Grafana stack URL and a Grafana service account token. The client looks up the OnCall API URL from the IRM plugin settings of your stack on the first request, so you don't need to know which OnCall region the stack uses.
+Pass your Grafana stack URL and a Grafana service account token. The client finds the right API endpoint from the IRM plugin settings of your stack on the first request.
 
 ```go
 package main
@@ -35,8 +33,8 @@ func main() {
 	client, err := aapi.NewWithGrafanaAutodiscovery(
 		"https://your-stack.grafana.net", // Grafana stack URL
 		"<grafana-service-account-token>",
-		"", // OnCall token; empty reuses the service account token
-		"", // optional OnCall API URL, used only if the lookup fails
+		"", // leave empty
+		"", // leave empty
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -50,22 +48,6 @@ func main() {
 		fmt.Println(u.ID, u.Username)
 	}
 }
-```
-
-### Explicit OnCall API URL
-
-If you already know the OnCall API URL, set it directly:
-
-```go
-// Grafana Cloud: OnCall API URL, token, and Grafana stack URL.
-client, err := aapi.NewWithGrafanaURL(
-	"https://oncall-prod-us-central-0.grafana.net/oncall",
-	"<grafana-service-account-token>",
-	"https://your-stack.grafana.net",
-)
-
-// OnCall API URL and an OnCall API token, with no Grafana stack URL.
-client, err := aapi.New("https://oncall.example.com", "<oncall-api-token>")
 ```
 
 Never hard-code tokens. Read them from environment variables or a secret store.
