@@ -30,6 +30,9 @@ jobs:
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          # Use the newest patch release rather than whatever the runner
+          # image ships, so govulncheck doesn't flag already-fixed stdlib bugs.
+          check-latest: true
           # Few dependencies, so caching buys little and skipping it avoids
           # sharing a cache between untrusted PR runs and main.
           cache: false
