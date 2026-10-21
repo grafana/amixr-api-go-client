@@ -33,7 +33,7 @@ func TestListUserGroups(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/user_groups/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testUserGroupBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testUserGroupBody)
 	})
 
 	options := &ListUserGroupOptions{

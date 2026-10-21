@@ -132,7 +132,7 @@ func TestListEscalations(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/escalation_policies/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testEscalationBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testEscalationBody)
 	})
 
 	options := &ListEscalationOptions{}

@@ -108,7 +108,7 @@ func TestListOnCallShifts(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/on_call_shifts/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testOnCallShiftBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testOnCallShiftBody)
 	})
 
 	options := &ListOnCallShiftOptions{
