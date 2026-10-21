@@ -86,7 +86,3 @@ CI runs the same checks, plus `go mod tidy`, on every pull request.
 Issues and pull requests are welcome. Please include tests for new endpoints or behaviour changes.
 
 To report a security issue, follow the [Grafana security policy](https://github.com/grafana/.github/blob/main/SECURITY.md). Do not open a public issue.
-
-## License
-
-[Apache License 2.0](LICENSE)
