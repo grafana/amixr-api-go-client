@@ -77,9 +77,10 @@ for page := 1; ; page++ {
 go test -race ./...
 go vet ./...
 gofmt -l .
+golangci-lint run
 ```
 
-CI runs the same checks, plus `go mod tidy`, on every pull request.
+CI runs the same checks, plus `go mod tidy` and `govulncheck`, on every pull request.
 
 ## Contributing
 
