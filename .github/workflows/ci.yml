@@ -53,3 +53,6 @@ jobs:
 
       - name: Test
         run: go test -race -count=1 ./...
+
+      - name: Check for known vulnerabilities
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
