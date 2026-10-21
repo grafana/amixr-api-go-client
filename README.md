@@ -3,7 +3,7 @@
 [![CI](https://github.com/grafana/amixr-api-go-client/actions/workflows/ci.yml/badge.svg)](https://github.com/grafana/amixr-api-go-client/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/grafana/amixr-api-go-client.svg)](https://pkg.go.dev/github.com/grafana/amixr-api-go-client)
 
-Go client for the [Grafana OnCall public API](https://grafana.com/docs/grafana-cloud/observe-and-act/respond-to-incidents/reference/oncall-api/).
+Go client for the [Grafana IRM / OnCall public API](https://grafana.com/docs/grafana-cloud/observe-and-act/respond-to-incidents/reference/oncall-api/).
 
 The module is still `v0.x`, so the API may change between minor versions.
 
