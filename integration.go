@@ -97,6 +97,9 @@ type KeyValueName struct {
 
 type ListIntegrationOptions struct {
 	ListOptions
+	Name string `url:"name,omitempty" json:"name,omitempty"`
+	// TeamID filters by team. Use NoTeamID to list integrations that do not belong to a team.
+	TeamID string `url:"team_id,omitempty" json:"team_id,omitempty"`
 }
 
 // ListIntegrations fetches all integrations for current organization.
