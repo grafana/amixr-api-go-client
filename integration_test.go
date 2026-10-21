@@ -77,10 +77,10 @@ var testIntegration = &Integration{
 	DynamicLabels: []*Label{
 		&Label{
 			Key: KeyValueName{
-				Name: "",
+				Name: "severity",
 			},
 			Value: KeyValueName{
-				Name: "Flop",
+				Name: "{{ payload.severity }}",
 			},
 		},
 	},
@@ -144,6 +144,16 @@ var testIntegrationBody = `{
 			},
 			"value": {
 				"name": "Flop"
+			}
+		}
+	],
+	"dynamic_labels":[
+		{
+			"key": {
+				"name": "severity"
+			},
+			"value": {
+				"name": "{{ payload.severity }}"
 			}
 		}
 	]

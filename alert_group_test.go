@@ -266,8 +266,8 @@ func TestGetAlertGroupWithSpecialCharacters(t *testing.T) {
 	mux.HandleFunc("/api/v1/alert_groups/I68T24C13IFW1%2F..%2Fadmin/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
 		// Verify the path is properly escaped
-		if r.URL.Path != expectedPath {
-			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.Path)
+		if r.URL.EscapedPath() != expectedPath {
+			t.Errorf("Expected path %s, got %s", expectedPath, r.URL.EscapedPath())
 		}
 		fmt.Fprint(w, testAlertGroupBody)
 	})
