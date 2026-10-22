@@ -27,6 +27,9 @@ const (
 		"and that the Grafana auth token has the plugins.app:access permission"
 )
 
+// NoTeamID is the team_id filter value that matches objects that do not belong to a team.
+const NoTeamID = "null"
+
 type ListOptions struct {
 	Page int `url:"page,omitempty" json:"page,omitempty"`
 }

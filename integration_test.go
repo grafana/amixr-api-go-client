@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -230,6 +231,54 @@ func TestListIntegrations(t *testing.T) {
 	if !reflect.DeepEqual(want, integrations) {
 
 		t.Errorf(" returned\n %+v, \nwant\n %+v", integrations, want)
+	}
+}
+
+func TestListIntegrations_Filters(t *testing.T) {
+	tests := []struct {
+		name    string
+		options *ListIntegrationOptions
+		want    url.Values
+	}{
+		{
+			name:    "no filters",
+			options: &ListIntegrationOptions{},
+			want:    url.Values{},
+		},
+		{
+			name:    "name and team",
+			options: &ListIntegrationOptions{Name: "Grafana :blush:", TeamID: "T3HRAP3K3IKOP"},
+			want:    url.Values{"name": {"Grafana :blush:"}, "team_id": {"T3HRAP3K3IKOP"}},
+		},
+		{
+			name:    "no team",
+			options: &ListIntegrationOptions{TeamID: NoTeamID},
+			want:    url.Values{"team_id": {"null"}},
+		},
+		{
+			name:    "page",
+			options: &ListIntegrationOptions{ListOptions: ListOptions{Page: 2}, TeamID: "T3HRAP3K3IKOP"},
+			want:    url.Values{"page": {"2"}, "team_id": {"T3HRAP3K3IKOP"}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mux, server, client := setup(t)
+			defer teardown(server)
+
+			mux.HandleFunc("/api/v1/integrations/", func(w http.ResponseWriter, r *http.Request) {
+				testRequestMethod(t, r, "GET")
+				if got := r.URL.Query(); !reflect.DeepEqual(tt.want, got) {
+					t.Errorf("query returned\n %+v, \nwant\n %+v", got, tt.want)
+				}
+				fmt.Fprint(w, `{"count": 0, "next": null, "previous": null, "results": []}`)
+			})
+
+			if _, _, err := client.Integrations.ListIntegrations(tt.options); err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 }
 
