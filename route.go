@@ -64,7 +64,7 @@ type ListRouteOptions struct {
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/routes/#list-routes
 func (service *RouteService) ListRoutes(opt *ListRouteOptions) (*PaginatedRoutesResponse, *http.Response, error) {
-	u := fmt.Sprintf("%s", service.url)
+	u := service.url
 
 	req, err := service.client.NewRequest("GET", u, opt)
 	if err != nil {

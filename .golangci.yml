@@ -1,0 +1,10 @@
+version: "2"
+
+linters:
+  # errcheck, govet, ineffassign, staticcheck and unused.
+  default: standard
+  exclusions:
+    presets:
+      # Skips unchecked errors that are idiomatic to ignore, such as
+      # resp.Body.Close() and fmt.Fprint to an http.ResponseWriter in tests.
+      - std-error-handling

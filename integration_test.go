@@ -78,10 +78,10 @@ var testIntegration = &Integration{
 	DynamicLabels: []*Label{
 		&Label{
 			Key: KeyValueName{
-				Name: "",
+				Name: "severity",
 			},
 			Value: KeyValueName{
-				Name: "Flop",
+				Name: "{{ payload.severity }}",
 			},
 		},
 	},
@@ -147,6 +147,16 @@ var testIntegrationBody = `{
 				"name": "Flop"
 			}
 		}
+	],
+	"dynamic_labels":[
+		{
+			"key": {
+				"name": "severity"
+			},
+			"value": {
+				"name": "{{ payload.severity }}"
+			}
+		}
 	]
  }`
 
@@ -198,7 +208,7 @@ func TestListIntegrations(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/integrations/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testIntegrationBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testIntegrationBody)
 	})
 
 	options := &ListIntegrationOptions{}

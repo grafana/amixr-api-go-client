@@ -39,7 +39,7 @@ type ListTeamOptions struct {
 
 // ListTeams fetchs all Teams for authorized user
 func (service *TeamService) ListTeams(opt *ListTeamOptions) (*PaginatedTeamsResponse, *http.Response, error) {
-	u := fmt.Sprintf("%s", service.url)
+	u := service.url
 
 	req, err := service.client.NewRequest("GET", u, opt)
 	if err != nil {

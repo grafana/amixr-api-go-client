@@ -1,0 +1,11 @@
+# Test binaries built with `go test -c`
+*.test
+
+# Coverage output
+*.out
+coverage.*
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
