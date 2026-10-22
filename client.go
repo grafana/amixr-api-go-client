@@ -348,16 +348,18 @@ func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("%s %s: %d %s", e.Response.Request.Method, u, e.Response.StatusCode, e.Message)
 }
 
-// BaseURL returns a copy of the OnCall API base URL, resolving it first for
-// autodiscovery clients. It returns nil if resolution failed (see EnsureBaseURL).
-// SetHTTPClient sets the HTTP client used for OnCall API requests, for example
-// to supply a custom transport, TLS configuration, or redirect policy. Retries
-// are still applied around it. It does not affect the plugin settings lookup
-// performed by NewWithGrafanaAutodiscovery.
+// SetHTTPClient sets the HTTP client used for OnCall API requests and, for
+// clients created with NewWithGrafanaAutodiscovery, for the grafana-irm-app
+// plugin settings lookup, for example to supply a custom transport, TLS
+// configuration, or redirect policy. With autodiscovery it must be able to
+// reach both Grafana and OnCall. Retries are still applied around it. It must
+// be called before the client makes any requests.
 func (c *Client) SetHTTPClient(httpClient *http.Client) {
 	c.client.HTTPClient = httpClient
 }
 
+// BaseURL returns a copy of the OnCall API base URL, resolving it first for
+// autodiscovery clients. It returns nil if resolution failed (see EnsureBaseURL).
 func (c *Client) BaseURL() *url.URL {
 	baseURL, err := c.baseURL()
 	if err != nil {
@@ -467,7 +469,7 @@ func (c *Client) fetchOnCallURLFromPlugin(ctx context.Context) (string, error) {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
-	resp, err := pluginSettingsHTTPClient().Do(req)
+	resp, err := pluginSettingsHTTPClient(c.client.HTTPClient).Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to request plugin settings: %w", err)
 	}
@@ -491,10 +493,12 @@ func (c *Client) fetchOnCallURLFromPlugin(ctx context.Context) (string, error) {
 	return settings.JSONData.OnCallAPIURL, nil
 }
 
-// pluginSettingsHTTPClient returns a low-retry HTTP client for the best-effort
-// plugin-settings lookup so a missing plugin or unreachable Grafana fails fast.
-func pluginSettingsHTTPClient() *http.Client {
+// pluginSettingsHTTPClient wraps httpClient in a low-retry client for the
+// best-effort plugin-settings lookup so a missing plugin or unreachable Grafana
+// fails fast.
+func pluginSettingsHTTPClient(httpClient *http.Client) *http.Client {
 	rc := retryablehttp.NewClient()
+	rc.HTTPClient = httpClient
 	rc.RetryMax = 2
 	rc.Logger = nil
 	return rc.StandardClient()

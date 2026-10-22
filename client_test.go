@@ -48,12 +48,17 @@ func TestNewClient(t *testing.T) {
 }
 
 type recordingTransport struct {
+	next     http.RoundTripper
 	requests []string
 }
 
 func (rt *recordingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	rt.requests = append(rt.requests, req.Method+" "+req.URL.Path)
-	return http.DefaultTransport.RoundTrip(req)
+	next := rt.next
+	if next == nil {
+		next = http.DefaultTransport
+	}
+	return next.RoundTrip(req)
 }
 
 func TestSetHTTPClient(t *testing.T) {
