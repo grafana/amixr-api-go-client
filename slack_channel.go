@@ -1,7 +1,6 @@
 package aapi
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -40,7 +39,7 @@ type ListSlackChannelOptions struct {
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/slack_channels/#list-slack-channels
 func (service *SlackChannelService) ListSlackChannels(opt *ListSlackChannelOptions) (*PaginatedSlackChannelsResponse, *http.Response, error) {
-	u := fmt.Sprintf("%s", service.url)
+	u := service.url
 
 	req, err := service.client.NewRequest("GET", u, opt)
 	if err != nil {

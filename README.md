@@ -3,7 +3,7 @@
 [![CI](https://github.com/grafana/amixr-api-go-client/actions/workflows/ci.yml/badge.svg)](https://github.com/grafana/amixr-api-go-client/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/grafana/amixr-api-go-client.svg)](https://pkg.go.dev/github.com/grafana/amixr-api-go-client)
 
-Go client for the [Grafana OnCall public API](https://grafana.com/docs/grafana-cloud/observe-and-act/respond-to-incidents/reference/oncall-api/).
+Go client for the [Grafana IRM / OnCall public API](https://grafana.com/docs/grafana-cloud/observe-and-act/respond-to-incidents/reference/oncall-api/).
 
 The module is still `v0.x`, so the API may change between minor versions.
 
@@ -77,9 +77,10 @@ for page := 1; ; page++ {
 go test -race ./...
 go vet ./...
 gofmt -l .
+golangci-lint run
 ```
 
-CI runs the same checks, plus `go mod tidy`, on every pull request.
+CI runs the same checks, plus `go mod tidy` and `govulncheck`, on every pull request.
 
 ## Contributing
 

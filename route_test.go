@@ -114,7 +114,7 @@ func TestListRoutes(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/routes/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testRouteBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testRouteBody)
 	})
 
 	options := &ListRouteOptions{

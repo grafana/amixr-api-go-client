@@ -31,7 +31,7 @@ func TestListWebhooks(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/webhooks/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testWebhookBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testWebhookBody)
 	})
 
 	options := &ListWebhookOptions{
