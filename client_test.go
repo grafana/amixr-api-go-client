@@ -47,6 +47,39 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
+type recordingTransport struct {
+	next     http.RoundTripper
+	requests []string
+}
+
+func (rt *recordingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	rt.requests = append(rt.requests, req.Method+" "+req.URL.Path)
+	next := rt.next
+	if next == nil {
+		next = http.DefaultTransport
+	}
+	return next.RoundTrip(req)
+}
+
+func TestSetHTTPClient(t *testing.T) {
+	mux, server, c := setup(t)
+	defer teardown(server)
+
+	mux.HandleFunc("/api/v1/users/U1/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"id": "U1"}`)
+	})
+
+	rt := &recordingTransport{}
+	c.SetHTTPClient(&http.Client{Transport: rt})
+
+	if _, _, err := c.Users.GetUser("U1", &GetUserOptions{}); err != nil {
+		t.Fatalf("GetUser returned error: %v", err)
+	}
+	if len(rt.requests) != 1 || rt.requests[0] != "GET /api/v1/users/U1/" {
+		t.Errorf("custom transport saw %v, want [GET /api/v1/users/U1/]", rt.requests)
+	}
+}
+
 func TestNewClientEmptyToken(t *testing.T) {
 	c, err := New("base_url", "")
 	if err != nil {

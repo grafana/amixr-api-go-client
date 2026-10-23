@@ -473,6 +473,32 @@ func TestAutodiscoveryConcurrentFailure(t *testing.T) {
 	}
 }
 
+func TestAutodiscoveryUsesHTTPClientForPluginLookup(t *testing.T) {
+	mux := http.NewServeMux()
+	server := httptest.NewTLSServer(mux)
+	defer server.Close()
+	mux.HandleFunc("/api/plugins/grafana-irm-app/settings", settingsHandler(server.URL+"/oncall", nil))
+	mux.HandleFunc("/oncall/api/v1/users/U1/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"id": "U1"}`)
+	})
+
+	c, err := NewWithGrafanaAutodiscovery(server.URL, "glsa_grafana", "oncall_token", "")
+	if err != nil {
+		t.Fatalf("constructor error: %v", err)
+	}
+	// Only server.Client() trusts the test certificate.
+	rt := &recordingTransport{next: server.Client().Transport}
+	c.SetHTTPClient(&http.Client{Transport: rt})
+
+	if _, _, err := c.Users.GetUser("U1", &GetUserOptions{}); err != nil {
+		t.Fatalf("GetUser returned error: %v", err)
+	}
+	want := []string{"GET /api/plugins/grafana-irm-app/settings", "GET /oncall/api/v1/users/U1/"}
+	if strings.Join(rt.requests, ",") != strings.Join(want, ",") {
+		t.Errorf("custom transport saw %v, want %v", rt.requests, want)
+	}
+}
+
 func TestAutodiscoveryIgnoresCallerContext(t *testing.T) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
