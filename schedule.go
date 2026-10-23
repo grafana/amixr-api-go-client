@@ -73,8 +73,7 @@ func (service *ScheduleService) ListSchedules(opt *ListScheduleOptions) (*Pagina
 	return schedules, resp, err
 }
 
-type GetScheduleOptions struct {
-}
+type GetScheduleOptions struct{}
 
 // GetSchedule fetches a schedule by given id
 //
@@ -121,7 +120,6 @@ func (service *ScheduleService) CreateSchedule(opt *CreateScheduleOptions) (*Sch
 	schedule := new(Schedule)
 
 	resp, err := service.client.Do(req, schedule)
-
 	if err != nil {
 		return nil, resp, err
 	}
@@ -160,14 +158,12 @@ func (service *ScheduleService) UpdateSchedule(id string, opt *UpdateScheduleOpt
 	return schedule, resp, err
 }
 
-type DeleteScheduleOptions struct {
-}
+type DeleteScheduleOptions struct{}
 
 // DeleteSchedule deletes a schedule.
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/schedules/#delete-a-schedule
 func (service *ScheduleService) DeleteSchedule(id string, opt *DeleteScheduleOptions) (*http.Response, error) {
-
 	u := fmt.Sprintf("%s/%s/", service.url, id)
 
 	req, err := service.client.NewRequest("DELETE", u, opt)
@@ -177,4 +173,43 @@ func (service *ScheduleService) DeleteSchedule(id string, opt *DeleteScheduleOpt
 
 	resp, err := service.client.Do(req, nil)
 	return resp, err
+}
+
+type PaginatedFinalShiftsResponse struct {
+	PaginatedResponse
+	FinalShifts []*FinalShift `json:"results"`
+}
+
+type FinalShift struct {
+	UserPk       string `json:"user_pk"`
+	UserEmail    string `json:"user_email"`
+	UserUsername string `json:"user_username"`
+	ShiftStart   string `json:"shift_start"`
+	ShiftEnd     string `json:"shift_end"`
+}
+
+type ListFinalShiftOptions struct {
+	ListOptions
+	StartDate string `url:"start_date" json:"start_date"`
+	EndDate   string `url:"end_date" json:"end_date"`
+}
+
+// ListFinalShifts fetches the final shifts for schedule
+//
+// https://grafana.com/docs/oncall/latest/oncall-api-reference/schedules/#export-a-schedules-final-shifts
+func (service *ScheduleService) ListFinalShifts(opt *ListFinalShiftOptions, id string) (*PaginatedFinalShiftsResponse, *http.Response, error) {
+	u := fmt.Sprintf("%s/%s/final_shifts", service.url, id)
+
+	req, err := service.client.NewRequest("GET", u, opt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var FinalShifts *PaginatedFinalShiftsResponse
+	resp, err := service.client.Do(req, &FinalShifts)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return FinalShifts, resp, err
 }
