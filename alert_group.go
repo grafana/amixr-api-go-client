@@ -160,3 +160,44 @@ func (service *AlertGroupService) GetAlertGroup(id string) (*AlertGroup, *http.R
 
 	return alertGroup, resp, err
 }
+
+func (service *AlertGroupService) postAlertGroupAction(id, action string) (*http.Response, error) {
+	sanitizedID := url.PathEscape(id)
+	u := fmt.Sprintf("%s/%s/%s", service.url, sanitizedID, action)
+
+	req, err := service.client.NewRequest("POST", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.client.Do(req, nil)
+	return resp, err
+}
+
+// AcknowledgeAlertGroup acknowledges a specific alert group by ID.
+//
+// https://grafana.com/docs/oncall/latest/oncall-api-reference/alertgroups/#acknowledge-an-alert-group
+func (service *AlertGroupService) AcknowledgeAlertGroup(id string) (*http.Response, error) {
+	return service.postAlertGroupAction(id, "acknowledge")
+}
+
+// UnacknowledgeAlertGroup unacknowledges a specific alert group by ID.
+//
+// https://grafana.com/docs/oncall/latest/oncall-api-reference/alertgroups/#unacknowledge-an-alert-group
+func (service *AlertGroupService) UnacknowledgeAlertGroup(id string) (*http.Response, error) {
+	return service.postAlertGroupAction(id, "unacknowledge")
+}
+
+// ResolveAlertGroup resolves a specific alert group by ID.
+//
+// https://grafana.com/docs/oncall/latest/oncall-api-reference/alertgroups/#resolve-an-alert-group
+func (service *AlertGroupService) ResolveAlertGroup(id string) (*http.Response, error) {
+	return service.postAlertGroupAction(id, "resolve")
+}
+
+// UnresolveAlertGroup unresolves a specific alert group by ID.
+//
+// https://grafana.com/docs/oncall/latest/oncall-api-reference/alertgroups/#unresolve-an-alert-group
+func (service *AlertGroupService) UnresolveAlertGroup(id string) (*http.Response, error) {
+	return service.postAlertGroupAction(id, "unresolve")
+}
