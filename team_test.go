@@ -32,7 +32,7 @@ func TestListTeams(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/teams/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testTeamBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testTeamBody)
 	})
 
 	options := &ListTeamOptions{

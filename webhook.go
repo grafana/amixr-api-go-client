@@ -55,7 +55,7 @@ type ListWebhookOptions struct {
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/outgoing_webhooks/#list-actions
 func (service *WebhookService) ListWebhooks(opt *ListWebhookOptions) (*PaginatedWebhooksResponse, *http.Response, error) {
-	u := fmt.Sprintf("%s", service.url)
+	u := service.url
 
 	req, err := service.client.NewRequest("GET", u, opt)
 	if err != nil {

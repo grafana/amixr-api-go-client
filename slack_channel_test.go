@@ -23,7 +23,7 @@ func TestListSlackChannels(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/slack_channels/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testSlackChannelBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testSlackChannelBody)
 	})
 
 	options := &ListSlackChannelOptions{}

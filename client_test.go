@@ -2,7 +2,7 @@ package aapi
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -173,7 +173,7 @@ func TestCheckResponse(t *testing.T) {
 	resp := &http.Response{
 		Request:    req.Request,
 		StatusCode: http.StatusBadRequest,
-		Body: ioutil.NopCloser(strings.NewReader(`
+		Body: io.NopCloser(strings.NewReader(`
 		{
 			"detail": "error"
 		}`)),

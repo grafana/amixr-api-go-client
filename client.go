@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sort"
@@ -27,6 +26,9 @@ const (
 	pluginLookupHint = "ensure the Grafana IRM app is installed and enabled for this stack " +
 		"and that the Grafana auth token has the plugins.app:access permission"
 )
+
+// NoTeamID is the team_id filter value that matches objects that do not belong to a team.
+const NoTeamID = "null"
 
 type ListOptions struct {
 	Page int `url:"page,omitempty" json:"page,omitempty"`
@@ -292,7 +294,7 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	errorResponse := &ErrorResponse{Response: r}
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err == nil && data != nil {
 		errorResponse.Body = data
 

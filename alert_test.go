@@ -67,7 +67,7 @@ func TestListAlerts(t *testing.T) {
 
 	mux.HandleFunc("/api/v1/alerts/", func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testAlertBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testAlertBody)
 	})
 
 	options := &ListAlertOptions{

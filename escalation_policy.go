@@ -56,7 +56,7 @@ type ListEscalationOptions struct {
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/escalation_policies/#list-escalation-policies
 func (service *EscalationService) ListEscalations(opt *ListEscalationOptions) (*PaginatedEscalationsResponse, *http.Response, error) {
-	u := fmt.Sprintf("%s", service.url)
+	u := service.url
 
 	req, err := service.client.NewRequest("GET", u, opt)
 	if err != nil {

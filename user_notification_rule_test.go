@@ -105,7 +105,7 @@ func TestListUserNotificationRules(t *testing.T) {
 	url := fmt.Sprintf("/api/v1/%s/", baseUrl)
 	mux.HandleFunc(url, func(w http.ResponseWriter, r *http.Request) {
 		testRequestMethod(t, r, "GET")
-		fmt.Fprint(w, fmt.Sprintf(`{"count": 1, "next": null, "previous": null, "results": [%s]}`, testUserNotificationRuleBody))
+		fmt.Fprintf(w, `{"count": 1, "next": null, "previous": null, "results": [%s]}`, testUserNotificationRuleBody)
 	})
 
 	options := &ListUserNotificationRuleOptions{

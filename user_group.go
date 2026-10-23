@@ -1,7 +1,6 @@
 package aapi
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -47,7 +46,7 @@ type ListUserGroupOptions struct {
 //
 // https://grafana.com/docs/grafana-cloud/oncall/oncall-api-reference/user_groups/#list-user-groups
 func (service *UserGroupService) ListUserGroups(opt *ListUserGroupOptions) (*PaginatedUserGroupsResponse, *http.Response, error) {
-	u := fmt.Sprintf("%s", service.url)
+	u := service.url
 
 	req, err := service.client.NewRequest("GET", u, opt)
 	if err != nil {
