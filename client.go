@@ -28,6 +28,7 @@ const (
 )
 
 // NoTeamID is the team_id filter value that matches objects that do not belong to a team.
+// It is supported by integrations and alert groups, but not by users.
 const NoTeamID = "null"
 
 type ListOptions struct {

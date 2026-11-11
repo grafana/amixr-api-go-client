@@ -31,11 +31,18 @@ type User struct {
 	Username string `json:"username"`
 	Role     string `json:"role"`
 	Email    string `json:"email"`
+	// Teams holds the public ids of the teams the user belongs to. It is nil
+	// when the API omits it, for example on requests that pass short=true.
+	Teams []string `json:"teams"`
 }
 
 type ListUserOptions struct {
 	ListOptions
 	Username string `url:"username,omitempty" json:"username,omitempty"`
+	// TeamID filters by membership of the team with this public id, as returned
+	// by the teams endpoint. NoTeamID is not supported here: the users endpoint
+	// has no filter for users who belong to no team, and "null" matches nothing.
+	TeamID string `url:"team_id,omitempty" json:"team_id,omitempty"`
 }
 
 // ListUsers fetches all users for authorized organization.
