@@ -71,6 +71,7 @@ type Client struct {
 	UserGroups            *UserGroupService
 	OnCallShifts          *OnCallShiftService
 	Teams                 *TeamService
+	TeamHours             *TeamHoursService
 	Webhooks              *WebhookService
 	UserNotificationRules *UserNotificationRuleService
 }
@@ -155,6 +156,7 @@ func newClient(grafana_url string) (*Client, error) {
 	c.UserGroups = NewUserGroupService(c)
 	c.OnCallShifts = NewOnCallShiftService(c)
 	c.Teams = NewTeamService(c)
+	c.TeamHours = NewTeamHoursService(c)
 	c.Webhooks = NewWebhookService(c)
 	c.UserNotificationRules = NewUserNotificationRuleService(c)
 
