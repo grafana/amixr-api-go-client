@@ -361,6 +361,18 @@ func (c *Client) SetHTTPClient(httpClient *http.Client) {
 	c.client.HTTPClient = httpClient
 }
 
+// SetRetryPolicy sets the policy that decides whether to retry OnCall API requests.
+// Use it with SetHTTPClient to stop retrying errors such as dials refused by a
+// custom transport. Call it before making requests. A nil policy restores
+// retryablehttp.DefaultRetryPolicy. The Grafana plugin settings lookup uses
+// its own retry policy.
+func (c *Client) SetRetryPolicy(policy retryablehttp.CheckRetry) {
+	if policy == nil {
+		policy = retryablehttp.DefaultRetryPolicy
+	}
+	c.client.CheckRetry = policy
+}
+
 // BaseURL returns a copy of the OnCall API base URL, resolving it first for
 // autodiscovery clients. It returns nil if resolution failed (see EnsureBaseURL).
 func (c *Client) BaseURL() *url.URL {

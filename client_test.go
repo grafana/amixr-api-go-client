@@ -1,12 +1,16 @@
 package aapi
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 // Tests should register handlers on mux which provide mock responses for the API method being tested.
@@ -78,6 +82,59 @@ func TestSetHTTPClient(t *testing.T) {
 	if len(rt.requests) != 1 || rt.requests[0] != "GET /api/v1/users/U1/" {
 		t.Errorf("custom transport saw %v, want [GET /api/v1/users/U1/]", rt.requests)
 	}
+}
+
+func TestSetRetryPolicy(t *testing.T) {
+	t.Run("custom policy stops after one attempt", func(t *testing.T) {
+		mux, server, c := setup(t)
+		defer teardown(server)
+
+		var hits atomic.Int32
+		mux.HandleFunc("/api/v1/users/U1/", func(w http.ResponseWriter, r *http.Request) {
+			hits.Add(1)
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		c.client.Backoff = func(time.Duration, time.Duration, int, *http.Response) time.Duration {
+			t.Error("unexpected retry backoff")
+			return 0
+		}
+		policyErr := errors.New("stop retrying")
+		c.SetRetryPolicy(func(context.Context, *http.Response, error) (bool, error) {
+			return false, policyErr
+		})
+
+		if _, _, err := c.Users.GetUser("U1", &GetUserOptions{}); !errors.Is(err, policyErr) {
+			t.Fatalf("GetUser error = %v, want %v", err, policyErr)
+		}
+		if got := hits.Load(); got != 1 {
+			t.Errorf("requests = %d, want 1", got)
+		}
+	})
+
+	t.Run("nil restores the default policy", func(t *testing.T) {
+		mux, server, c := setup(t)
+		defer teardown(server)
+
+		var hits atomic.Int32
+		mux.HandleFunc("/api/v1/users/U1/", func(w http.ResponseWriter, r *http.Request) {
+			if hits.Add(1) == 1 {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			fmt.Fprint(w, `{"id":"U1"}`)
+		})
+		c.client.RetryWaitMin = time.Millisecond
+		c.client.RetryWaitMax = time.Millisecond
+		c.SetRetryPolicy(func(context.Context, *http.Response, error) (bool, error) { return false, nil })
+		c.SetRetryPolicy(nil)
+
+		if _, _, err := c.Users.GetUser("U1", &GetUserOptions{}); err != nil {
+			t.Fatalf("GetUser returned error: %v", err)
+		}
+		if got := hits.Load(); got != 2 {
+			t.Errorf("requests = %d, want 2", got)
+		}
+	})
 }
 
 func TestNewClientEmptyToken(t *testing.T) {
