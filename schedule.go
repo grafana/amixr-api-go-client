@@ -27,6 +27,7 @@ type PaginatedSchedulesResponse struct {
 }
 
 type Schedule struct {
+	Labels             []*Label       `json:"labels"`
 	ID                 string         `json:"id"`
 	TeamId             string         `json:"team_id"`
 	Type               string         `json:"type"`
@@ -97,6 +98,7 @@ func (service *ScheduleService) GetSchedule(id string, opt *GetScheduleOptions) 
 }
 
 type CreateScheduleOptions struct {
+	Labels             []*Label       `json:"labels,omitempty"`
 	TeamId             string         `json:"team_id"`
 	Name               string         `json:"name"`
 	Type               string         `json:"type"`
@@ -130,6 +132,7 @@ func (service *ScheduleService) CreateSchedule(opt *CreateScheduleOptions) (*Sch
 }
 
 type UpdateScheduleOptions struct {
+	Labels             *[]*Label      `json:"labels,omitempty"`
 	Name               string         `json:"name,omitempty"`
 	TeamId             string         `json:"team_id"`
 	ICalUrlPrimary     *string        `json:"ical_url_primary"`
