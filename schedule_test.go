@@ -1,6 +1,7 @@
 package aapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -39,6 +40,31 @@ var testScheduleBody = `{
 		"U6RV9WPSL6DFW"
 	]
 }`
+
+func TestScheduleLabelPayloads(t *testing.T) {
+	labels := []*Label{{Key: KeyValueName{Name: "env"}, Value: KeyValueName{Name: "prod"}}}
+	for _, tc := range []struct {
+		options any
+		want    string
+	}{
+		{CreateScheduleOptions{Type: "web", Labels: labels}, `[{"key":{"name":"env"},"value":{"name":"prod"}}]`},
+		{UpdateScheduleOptions{Labels: LabelList(labels)}, `[{"key":{"name":"env"},"value":{"name":"prod"}}]`},
+		{UpdateScheduleOptions{Labels: EmptyLabelList()}, "[]"},
+		{UpdateScheduleOptions{}, ""},
+	} {
+		b, err := json.Marshal(tc.options)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var body map[string]json.RawMessage
+		if err := json.Unmarshal(b, &body); err != nil {
+			t.Fatal(err)
+		}
+		if got := string(body["labels"]); got != tc.want {
+			t.Errorf("labels = %q, want %q", got, tc.want)
+		}
+	}
+}
 
 func TestCreateSchedule(t *testing.T) {
 	mux, server, client := setup(t)
